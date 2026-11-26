@@ -1,9 +1,5 @@
 import mongoose from 'mongoose';
 
-/**
- * Schema Đặt lịch xem phòng trọ (VIEWING -> rentalRoomId)
- * & Đặt phòng Khách sạn/Resort theo Hạng phòng + Phòng cụ thể + Gói giá/dịch vụ (STAY)
- */
 const bookingSchema = new mongoose.Schema(
   {
     bookingCode: { type: String, required: true, unique: true },
@@ -12,21 +8,24 @@ const bookingSchema = new mongoose.Schema(
       enum: ['VIEWING', 'STAY'],
       required: true,
     },
-    // Dành cho đặt lịch xem phòng trọ / căn hộ (rental_rooms)
+    // Hình thức đặt lưu trú: Đặt theo giờ (HOURLY) | Đặt qua đêm (OVERNIGHT) | Đặt theo ngày (DAILY)
+    stayBookingMode: {
+      type: String,
+      enum: ['HOURLY', 'OVERNIGHT', 'DAILY', null],
+      default: null,
+    },
+
     rentalRoomId: { type: mongoose.Schema.Types.ObjectId, ref: 'RentalRoom', default: null },
-
-    // Dành cho đặt phòng Khách sạn / Resort (accommodations + rooms + roomUnits + ratePackages)
     accommodationId: { type: mongoose.Schema.Types.ObjectId, ref: 'Accommodation', default: null },
-    roomId: { type: mongoose.Schema.Types.ObjectId, ref: 'Room', default: null }, // ID hạng phòng
-    roomUnitId: { type: mongoose.Schema.Types.ObjectId, default: null }, // ID phòng cụ thể (trong room.roomUnits)
-    ratePackageId: { type: mongoose.Schema.Types.ObjectId, default: null }, // ID gói giá đã chọn
+    roomId: { type: mongoose.Schema.Types.ObjectId, ref: 'Room', default: null },
+    roomUnitId: { type: mongoose.Schema.Types.ObjectId, default: null },
+    ratePackageId: { type: mongoose.Schema.Types.ObjectId, default: null },
 
-    // Lưu bản chụp (snapshot) phòng & gói dịch vụ tại thời điểm đặt để tránh đổi giá về sau
     selectedSelection: {
       roomNumber: { type: String, default: '' },
       packageCode: { type: String, default: '' },
       packageName: { type: String, default: '' },
-      billingUnit: { type: String, enum: ['NIGHT', 'MONTH', 'HOUR'], default: 'NIGHT' },
+      bookingMode: { type: String, enum: ['HOURLY', 'OVERNIGHT', 'DAILY'], default: 'OVERNIGHT' },
       unitPrice: { type: Number, default: 0 },
       includedServices: [{ type: String }],
       cancellationPolicy: { type: String, default: '' },
@@ -43,15 +42,32 @@ const bookingSchema = new mongoose.Schema(
       enum: ['PENDING', 'CONFIRMED', 'CANCELLED', 'COMPLETED'],
       default: 'CONFIRMED',
     },
+
+    // 1. Lịch xem phòng trọ (VIEWING)
     viewingSchedule: {
       appointmentTime: { type: Date, default: null },
       timeSlot: { type: String, default: '' },
       note: { type: String, default: '' },
     },
-    staySchedule: {
+
+    // 2. Trường Đặt phòng theo giờ (HOURLY)
+    hourlyBooking: {
+      bookingDate: { type: Date, default: null },     // Ngày sử dụng
+      checkInTime: { type: String, default: '' },     // VD: "14:00"
+      checkOutTime: { type: String, default: '' },    // VD: "17:00"
+      durationHours: { type: Number, default: 2, min: 1 },
+      roomQuantity: { type: Number, default: 1, min: 1 },
+      adults: { type: Number, default: 2 },
+      children: { type: Number, default: 0 },
+      estimatedTotal: { type: Number, default: 0 },
+    },
+
+    // 3. Trường Đặt phòng qua đêm & theo ngày (OVERNIGHT | DAILY)
+    overnightOrDailyBooking: {
+      stayMode: { type: String, enum: ['OVERNIGHT', 'DAILY'], default: 'OVERNIGHT' },
       checkInDate: { type: Date, default: null },
       checkOutDate: { type: Date, default: null },
-      nights: { type: Number, default: 1 },
+      totalUnits: { type: Number, default: 1, min: 1 }, // Số đêm (OVERNIGHT) hoặc số ngày (DAILY)
       roomQuantity: { type: Number, default: 1, min: 1 },
       adults: { type: Number, default: 2 },
       children: { type: Number, default: 0 },

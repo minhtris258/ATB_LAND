@@ -57,82 +57,111 @@ export async function createBooking(req, res) {
   try {
     const {
       accommodationId,
+      rentalRoomId,
       roomId,
       roomUnitId,
       ratePackageId,
+      stayBookingMode, // 'HOURLY' | 'OVERNIGHT' | 'DAILY'
       guestInfo,
       viewingSchedule,
-      staySchedule,
+      hourlyBooking,
+      overnightOrDailyBooking,
     } = req.body;
 
-    const accommodation = await Accommodation.findById(accommodationId);
-    if (!accommodation || accommodation.status !== 'ACTIVE') {
-      return res.status(404).json({ success: false, message: 'Chỗ ở không tồn tại hoặc tạm ngừng nhận khách.' });
+    // Nhánh 1: Đặt lịch xem phòng trọ / studio (VIEWING)
+    if (rentalRoomId) {
+      if (!viewingSchedule?.appointmentTime) {
+        return res.status(400).json({ success: false, message: 'Vui lòng chọn ngày giờ xem phòng.' });
+      }
+      const booking = await Booking.create({
+        bookingCode: generateBookingCode(),
+        bookingType: 'VIEWING',
+        rentalRoomId,
+        guestId: req.user ? req.user.userId : null,
+        guestInfo,
+        status: 'CONFIRMED',
+        viewingSchedule: {
+          appointmentTime: new Date(viewingSchedule.appointmentTime),
+          timeSlot: viewingSchedule.timeSlot || '',
+          note: viewingSchedule.note || '',
+        },
+      });
+      return res.status(201).json({ success: true, data: booking });
     }
 
-    const isViewing = accommodation.category === 'ROOM';
+    // Nhánh 2: Đặt lưu trú Hotel / Resort / Homestay (STAY)
+    const accommodation = await Accommodation.findById(accommodationId);
+    if (!accommodation || accommodation.status !== 'ACTIVE') {
+      return res.status(404).json({ success: false, message: 'Cơ sở lưu trú không tồn tại hoặc tạm ngưng.' });
+    }
+
+    if (!roomId || !roomUnitId || !ratePackageId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Vui lòng chọn hạng phòng, phòng cụ thể và gói giá.',
+      });
+    }
+
+    const roomTypeDoc = await Room.findOne({ _id: roomId, accommodationId, status: 'ACTIVE' });
+    const roomUnit = roomTypeDoc?.roomUnits.id(roomUnitId);
+    const ratePackage = roomUnit?.ratePackages.id(ratePackageId);
+
+    if (!roomTypeDoc || !roomUnit || roomUnit.status !== 'AVAILABLE' || !ratePackage || !ratePackage.isActive) {
+      return res.status(404).json({ success: false, message: 'Phòng hoặc gói giá không khả dụng.' });
+    }
+
+    const mode = (stayBookingMode || ratePackage.bookingMode || 'OVERNIGHT').toUpperCase();
     const bookingData = {
       bookingCode: generateBookingCode(),
+      bookingType: 'STAY',
+      stayBookingMode: mode,
       accommodationId: accommodation._id,
-      roomId: null,
-      roomUnitId: null,
-      ratePackageId: null,
-      selectedSelection: null,
+      roomId: roomTypeDoc._id,
+      roomUnitId: roomUnit._id,
+      ratePackageId: ratePackage._id,
+      selectedSelection: {
+        roomNumber: roomUnit.roomNumber,
+        packageCode: ratePackage.code || '',
+        packageName: ratePackage.name,
+        bookingMode: mode,
+        unitPrice: ratePackage.price,
+        includedServices: ratePackage.includedServices || [],
+        cancellationPolicy: ratePackage.cancellationPolicy || '',
+      },
       guestId: req.user ? req.user.userId : null,
       guestInfo,
-      bookingType: isViewing ? 'VIEWING' : 'STAY',
       status: 'CONFIRMED',
     };
 
-    if (isViewing) {
-      if (!viewingSchedule || !viewingSchedule.appointmentTime) {
-        return res.status(400).json({ success: false, message: 'Vui lòng chọn ngày và khung giờ xem phòng.' });
+    if (mode === 'HOURLY') {
+      if (!hourlyBooking?.bookingDate || !hourlyBooking?.checkInTime) {
+        return res.status(400).json({ success: false, message: 'Vui lòng nhập ngày và giờ nhận phòng theo giờ.' });
       }
-      bookingData.viewingSchedule = {
-        appointmentTime: new Date(viewingSchedule.appointmentTime),
-        timeSlot: viewingSchedule.timeSlot || '',
-        note: viewingSchedule.note || '',
+      const hours = Math.max(ratePackage.minHours || 1, Number(hourlyBooking.durationHours || 2));
+      const qty = Math.max(1, Number(hourlyBooking.roomQuantity || 1));
+      const extraHours = Math.max(0, hours - (ratePackage.minHours || 2));
+      const unitTotal = ratePackage.price + extraHours * (ratePackage.extraHourPrice || 0);
+
+      bookingData.hourlyBooking = {
+        bookingDate: new Date(hourlyBooking.bookingDate),
+        checkInTime: hourlyBooking.checkInTime,
+        checkOutTime: hourlyBooking.checkOutTime || '',
+        durationHours: hours,
+        roomQuantity: qty,
+        adults: Number(hourlyBooking.adults || 2),
+        children: Number(hourlyBooking.children || 0),
+        estimatedTotal: unitTotal * qty,
       };
     } else {
-      if (!staySchedule || !staySchedule.checkInDate || !staySchedule.checkOutDate) {
-        return res.status(400).json({ success: false, message: 'Vui lòng chọn ngày Check-in và Check-out.' });
-      }
-      if (!roomId || !roomUnitId || !ratePackageId) {
-        return res.status(400).json({
-          success: false,
-          message: 'Vui lòng chọn đầy đủ hạng phòng (roomId), phòng cụ thể (roomUnitId) và gói giá (ratePackageId).',
-        });
+      // OVERNIGHT hoặc DAILY
+      if (!overnightOrDailyBooking?.checkInDate || !overnightOrDailyBooking?.checkOutDate) {
+        return res.status(400).json({ success: false, message: 'Vui lòng chọn ngày nhận và trả phòng.' });
       }
 
-      const roomTypeDoc = await Room.findOne({
-        _id: roomId,
-        accommodationId: accommodation._id,
-        status: 'ACTIVE',
-      });
-      if (!roomTypeDoc) {
-        return res.status(404).json({ success: false, message: 'Hạng phòng đã chọn không tồn tại hoặc tạm ngưng.' });
-      }
-
-      const roomUnit = roomTypeDoc.roomUnits.id(roomUnitId);
-      if (!roomUnit || roomUnit.status !== 'AVAILABLE') {
-        return res.status(404).json({
-          success: false,
-          message: 'Phòng cụ thể đã chọn không tồn tại hoặc hiện không khả dụng.',
-        });
-      }
-
-      const ratePackage = roomUnit.ratePackages.id(ratePackageId);
-      if (!ratePackage || ratePackage.isActive === false) {
-        return res.status(404).json({
-          success: false,
-          message: 'Gói giá và dịch vụ đã chọn không tồn tại hoặc đã ngừng áp dụng.',
-        });
-      }
-
-      const checkIn = new Date(staySchedule.checkInDate);
-      const checkOut = new Date(staySchedule.checkOutDate);
-      if (Number.isNaN(checkIn.getTime()) || Number.isNaN(checkOut.getTime()) || checkOut <= checkIn) {
-        return res.status(400).json({ success: false, message: 'Khoảng ngày nhận/trả phòng không hợp lệ.' });
+      const checkIn = new Date(overnightOrDailyBooking.checkInDate);
+      const checkOut = new Date(overnightOrDailyBooking.checkOutDate);
+      if (checkOut <= checkIn) {
+        return res.status(400).json({ success: false, message: 'Ngày trả phòng phải sau ngày nhận phòng.' });
       }
 
       const availability = await checkRoomAvailability({
@@ -143,52 +172,29 @@ export async function createBooking(req, res) {
         checkOutDate: checkOut,
       });
 
-      const roomQuantity = Math.max(1, Number(staySchedule.roomQuantity || 1));
-      if (!availability.available || availability.remaining < roomQuantity) {
+      const qty = Math.max(1, Number(overnightOrDailyBooking.roomQuantity || 1));
+      if (!availability.available || availability.remaining < qty) {
         return res.status(409).json({
           success: false,
-          message: `Phòng ${roomUnit.roomNumber} đã có lịch đặt trùng trong khoảng ngày bạn chọn.`,
+          message: `Phòng ${roomUnit.roomNumber} đã có lịch đặt trùng trong khoảng ngày này.`,
         });
       }
 
-      const durationUnits = calculateDurationUnits(
-        ratePackage.billingUnit,
-        checkIn,
-        checkOut,
-        staySchedule.nights
-      );
-      const unitPrice = Number(ratePackage.price || 0);
-      const estimatedTotal = durationUnits * roomQuantity * unitPrice;
-
-      bookingData.roomId = roomTypeDoc._id;
-      bookingData.roomUnitId = roomUnit._id;
-      bookingData.ratePackageId = ratePackage._id;
-      bookingData.selectedSelection = {
-        roomNumber: roomUnit.roomNumber,
-        packageCode: ratePackage.code || '',
-        packageName: ratePackage.name,
-        billingUnit: ratePackage.billingUnit,
-        unitPrice,
-        includedServices: ratePackage.includedServices || [],
-        cancellationPolicy: ratePackage.cancellationPolicy || '',
-      };
-      bookingData.staySchedule = {
+      const totalUnits = Math.max(1, Math.round((checkOut - checkIn) / (1000 * 60 * 60 * 24)));
+      bookingData.overnightOrDailyBooking = {
+        stayMode: mode === 'DAILY' ? 'DAILY' : 'OVERNIGHT',
         checkInDate: checkIn,
         checkOutDate: checkOut,
-        nights: durationUnits,
-        roomQuantity,
-        adults: Number(staySchedule.adults || 2),
-        children: Number(staySchedule.children || 0),
-        estimatedTotal,
+        totalUnits,
+        roomQuantity: qty,
+        adults: Number(overnightOrDailyBooking.adults || 2),
+        children: Number(overnightOrDailyBooking.children || 0),
+        estimatedTotal: totalUnits * qty * ratePackage.price,
       };
     }
 
     const booking = await Booking.create(bookingData);
-    res.status(201).json({
-      success: true,
-      message: 'Xác nhận đặt phòng thành công.',
-      data: booking,
-    });
+    res.status(201).json({ success: true, data: booking });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

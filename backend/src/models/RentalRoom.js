@@ -1,9 +1,5 @@
 import mongoose from 'mongoose';
 
-/**
- * Schema Phòng trọ & Căn hộ dịch vụ (rental_rooms - Thuê dài hạn theo tháng)
- * Tách riêng khỏi Khách sạn & Resort để tối ưu chỉ số điện/nước, trạng thái thuê và đặt lịch xem phòng
- */
 const rentalRoomSchema = new mongoose.Schema(
   {
     hostId: {
@@ -23,20 +19,18 @@ const rentalRoomSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
     },
-    roomType: {
+    category: {
       type: String,
-      enum: ['BOARDING_ROOM', 'STUDIO', 'MINI_APARTMENT', 'WHOLE_HOUSE'],
+      enum: ['BOARDING_ROOM', 'STUDIO', 'MINI_APARTMENT', 'WHOLE_HOUSE', 'SLEEPBOX'],
       default: 'STUDIO',
+      required: true,
     },
     status: {
       type: String,
       enum: ['PENDING', 'ACTIVE', 'OCCUPIED', 'INACTIVE'],
       default: 'ACTIVE',
     },
-    description: {
-      type: String,
-      default: '',
-    },
+    description: { type: String, default: '' },
     location: {
       city: { type: String, required: true },
       district: { type: String, required: true },
@@ -62,12 +56,7 @@ const rentalRoomSchema = new mongoose.Schema(
       availableRooms: { type: Number, default: 1, min: 0 },
       isCurfewFree: { type: Boolean, default: true },
     },
-    amenityIds: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Amenity',
-      },
-    ],
+    amenityIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Amenity' }],
     media: [
       {
         url: { type: String, required: true },
@@ -77,12 +66,11 @@ const rentalRoomSchema = new mongoose.Schema(
     ],
     reportCount: { type: Number, default: 0 },
     lastConfirmedAt: { type: Date, default: Date.now },
-    ratingStats: { averageRating: { type: Number, default: 0 }, totalReviews: { type: Number, default: 0 } },
   },
   { timestamps: true }
 );
 
-rentalRoomSchema.index({ 'location.city': 1, 'location.district': 1, status: 1, 'pricing.monthlyRent': 1 });
+rentalRoomSchema.index({ 'location.city': 1, 'location.district': 1, category: 1, status: 1, 'pricing.monthlyRent': 1 });
 rentalRoomSchema.index({ amenityIds: 1 });
 rentalRoomSchema.index({ 'location.geo': '2dsphere' });
 

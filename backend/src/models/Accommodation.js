@@ -1,9 +1,5 @@
 import mongoose from 'mongoose';
 
-/**
- * Schema Cơ sở lưu trú Khách sạn & Resort (accommodations: HOTEL | RESORT)
- * Liên kết 1-N với `rooms` (các hạng phòng), mỗi hạng phòng có nhiều phòng và nhiều gói giá/dịch vụ
- */
 const accommodationSchema = new mongoose.Schema(
   {
     hostId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -11,7 +7,7 @@ const accommodationSchema = new mongoose.Schema(
     slug: { type: String, required: true, unique: true, lowercase: true },
     category: {
       type: String,
-      enum: ['HOTEL', 'RESORT'],
+      enum: ['HOTEL', 'RESORT', 'HOMESTAY'],
       required: true,
     },
     status: {
@@ -31,7 +27,7 @@ const accommodationSchema = new mongoose.Schema(
       },
     },
     pricing: {
-      minNightlyPrice: { type: Number, required: true, min: 0 }, // Tự động đồng bộ từ gói giá thấp nhất của các phòng
+      minNightlyPrice: { type: Number, required: true, min: 0 },
       checkInTime: { type: String, default: '14:00' },
       checkOutTime: { type: String, default: '12:00' },
     },
@@ -39,12 +35,7 @@ const accommodationSchema = new mongoose.Schema(
       starRating: { type: Number, min: 1, max: 5, default: 4 },
       totalRoomsCount: { type: Number, default: 1, min: 1 },
     },
-    amenityIds: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Amenity',
-      },
-    ],
+    amenityIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Amenity' }],
     media: [
       {
         url: { type: String, required: true },
@@ -54,9 +45,7 @@ const accommodationSchema = new mongoose.Schema(
     ],
     reportCount: { type: Number, default: 0 },
     lastConfirmedAt: { type: Date, default: Date.now },
-    ratingStats: { averageRating: { type: Number, default: 0 }, totalReviews: { type: Number, default: 0 } },
   },
-  
   { timestamps: true }
 );
 
