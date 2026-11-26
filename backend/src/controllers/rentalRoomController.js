@@ -21,11 +21,14 @@ function toSlug(text) {
  */
 export async function getRentalRooms(req, res) {
   try {
-    const { city, district, priceRange, amenityIds, sortBy } = req.query;
+    const { city, district, category, priceRange, amenityIds, sortBy } = req.query;
     const filter = { status: 'ACTIVE' };
 
     if (city && city !== 'ALL') filter['location.city'] = city;
     if (district && district !== 'ALL') filter['location.district'] = district;
+    if (category && category !== 'ALL') {
+      filter.category = String(category).trim().toUpperCase();
+    }
 
     if (priceRange && priceRange !== 'ALL') {
       if (priceRange === 'UNDER_2M') filter['pricing.monthlyRent'] = { $lt: 2000000 };
@@ -87,13 +90,12 @@ export async function getRentalRoomDetail(req, res) {
  */
 export async function createRentalRoom(req, res) {
   try {
-    const { title, roomType, description, location, pricing, specs, amenityIds, media } = req.body;
-
+    const { title, category, description, location, pricing, specs, amenityIds, media } = req.body;
     const created = await RentalRoom.create({
       hostId: req.user.userId,
       title,
       slug: toSlug(title),
-      roomType: roomType || 'STUDIO',
+      category: (category || 'STUDIO').toUpperCase(),
       status: req.user.role === 'ADMIN' ? 'ACTIVE' : 'PENDING',
       description,
       location,
