@@ -1,0 +1,1603 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ATB LAND - Tìm Phòng Trọ, Chung Cư Mini &amp; Đặt Lịch Xem Phòng</title>
+  <meta name="description" content="Nền tảng tìm phòng trọ, căn hộ dịch vụ và chung cư mini chính chủ không qua môi giới. Xem ảnh thực tế đa góc và đặt lịch hẹn xem phòng trực tiếp cùng ATB LAND." />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#4f46e5',
+              600: '#4338ca',
+              700: '#3730a3',
+              900: '#1e1b4b',
+            },
+            accent: {
+              500: '#0d9488',
+              600: '#0f766e',
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    html {
+      scroll-behavior: smooth;
+    }
+    .line-clamp-2 {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased selection:bg-brand-600 selection:text-white">
+  <!-- Thanh thông báo nổi (Toast Notification - thay thế alert) -->
+  <div id="toast-container" class="fixed top-5 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
+
+  <!-- 1. HEADER ĐIỀU HƯỚNG -->
+  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-slate-200 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <!-- Logo ATB LAND -->
+        <a href="#" class="flex items-center gap-2.5 group">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-accent-600 flex items-center justify-center text-white font-extrabold text-lg shadow-md group-hover:scale-105 transition">
+            ATB
+          </div>
+          <div>
+            <span class="block text-lg font-extrabold tracking-tight text-slate-900 leading-none">ATB LAND</span>
+            <span class="block text-[11px] font-medium text-accent-600 tracking-wide mt-0.5">PHÒNG TRỌ CHÍNH CHỦ</span>
+          </div>
+        </a>
+
+        <!-- Menu Desktop -->
+        <nav class="hidden md:flex items-center gap-6 text-sm font-semibold text-slate-600">
+          <a href="#danh-sach-phong" class="hover:text-accent-600 transition py-2">Tìm phòng trọ</a>
+          <a href="#toa-nha-noi-bat" class="hover:text-accent-600 transition py-2">Tòa nhà nổi bật</a>
+          <a href="#danh-cho-chu-tro" class="hover:text-accent-600 transition py-2">Dành cho Chủ trọ</a>
+          <a href="#cam-ket-phap-ly" class="hover:text-accent-600 transition py-2">Quy chế &amp; Pháp lý</a>
+        </nav>
+
+        <!-- Nút hành động bên phải -->
+        <div class="hidden md:flex items-center gap-3">
+          <button type="button" onclick="openAuthModal()" class="px-3.5 py-2 text-sm font-semibold text-slate-700 hover:text-accent-600 rounded-xl hover:bg-slate-100 transition">
+            Đăng nhập / Đăng ký
+          </button>
+          <button type="button" onclick="openPostRoomGuide()" class="px-4 py-2 text-sm font-semibold text-white bg-accent-500 hover:bg-accent-600 rounded-xl shadow-sm transition flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            Đăng tin cho thuê
+          </button>
+        </div>
+
+        <!-- Nút menu Mobile -->
+        <button id="mobile-menu-btn" type="button" aria-label="Mở menu" class="md:hidden p-2.5 rounded-xl text-slate-600 hover:bg-slate-100 transition">
+          <svg id="menu-icon-open" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+          <svg id="menu-icon-close" class="w-6 h-6 hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Menu Mobile -->
+    <div id="mobile-menu" class="hidden md:hidden border-t border-slate-100 bg-white px-4 py-4 space-y-2">
+      <a href="#danh-sach-phong" onclick="closeMobileMenu()" class="block px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-700 hover:bg-brand-50 hover:text-brand-600">Tìm phòng trọ</a>
+      <a href="#toa-nha-noi-bat" onclick="closeMobileMenu()" class="block px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-700 hover:bg-brand-50 hover:text-brand-600">Tòa nhà nổi bật</a>
+      <a href="#danh-cho-chu-tro" onclick="closeMobileMenu()" class="block px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-700 hover:bg-brand-50 hover:text-brand-600">Dành cho Chủ trọ</a>
+      <a href="#cam-ket-phap-ly" onclick="closeMobileMenu()" class="block px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-700 hover:bg-brand-50 hover:text-brand-600">Quy chế &amp; Pháp lý</a>
+      <div class="pt-3 border-t border-slate-100 flex flex-col gap-2">
+        <button type="button" onclick="closeMobileMenu(); openAuthModal();" class="w-full py-2.5 px-4 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition">
+          Đăng nhập / Đăng ký
+        </button>
+        <button type="button" onclick="closeMobileMenu(); openPostRoomGuide();" class="w-full py-2.5 px-4 text-sm font-semibold text-white bg-accent-500 hover:bg-accent-500 rounded-xl transition">
+          Đăng tin cho thuê
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 2. HERO SECTION & THANH TÌM KIẾM ĐA ĐIỀU KIỆN -->
+  <section class="relative bg-gradient-to-br from-brand-100 via-brand-400 to-accent-500 text-white pt-10 pb-16 sm:pt-14 sm:pb-20 overflow-hidden">
+    <!-- Trang trí nền nhẹ -->
+    <div class="absolute inset-0 opacity-10 pointer-events-none">
+      <div class="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-white blur-3xl"></div>
+      <div class="absolute bottom-0 left-10 w-72 h-72 rounded-full bg-teal-300 blur-3xl"></div>
+    </div>
+
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-3xl mx-auto text-center mb-8">
+        <span class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/15 backdrop-blur text-xs font-semibold tracking-wide mb-4 border border-white/20">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          100% Tin xác thực • Không phí môi giới trung gian
+        </span>
+        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight">
+          Tìm Phòng Trọ, Chung Cư Mini &amp; Căn Hộ Dịch Vụ Minh Bạch
+        </h1>
+        <p class="mt-3.5 text-base sm:text-lg text-indigo-100 max-w-2xl mx-auto">
+          Khám phá hàng trăm phòng trọ sạch đẹp, xem ảnh thực tế đa góc, giá điện nước rõ ràng và đặt lịch hẹn xem phòng trực tiếp cùng ATB LAND.
+        </p>
+      </div>
+
+      <!-- Thanh tìm kiếm đa điều kiện -->
+      <form id="search-filter-form" class="bg-white text-slate-800 rounded-2xl shadow-2xl p-4 sm:p-6 border border-slate-100">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- Tỉnh / Thành phố -->
+          <div>
+            <label for="filter-city" class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+              Tỉnh / Thành phố
+            </label>
+            <select id="filter-city" class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-600 focus:ring-2 focus:ring-brand-100 px-3.5 py-2.5 text-sm font-medium text-slate-800 outline-none transition">
+              <option value="ALL">Tất cả khu vực</option>
+              <option value="Hà Nội">Hà Nội</option>
+              <option value="TP. Hồ Chí Minh">TP. Hồ Chí Minh</option>
+              <option value="Đà Nẵng">Đà Nẵng</option>
+              <option value="Huế">Huế</option>
+            </select>
+          </div>
+
+          <!-- Quận / Huyện -->
+          <div>
+            <label for="filter-district" class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+              Quận / Huyện / Thành phố
+            </label>
+            <select id="filter-district" class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-600 focus:ring-2 focus:ring-brand-100 px-3.5 py-2.5 text-sm font-medium text-slate-800 outline-none transition">
+              <option value="ALL">Tất cả Quận / Huyện</option>
+            </select>
+          </div>
+
+          <!-- Khoảng giá -->
+          <div>
+            <label for="filter-price" class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+              Khoảng giá / tháng
+            </label>
+            <select id="filter-price" class="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-600 focus:ring-2 focus:ring-brand-100 px-3.5 py-2.5 text-sm font-medium text-slate-800 outline-none transition">
+              <option value="ALL">Mọi mức giá</option>
+              <option value="UNDER_3">Dưới 3 triệu</option>
+              <option value="3_TO_5">3 - 5 triệu</option>
+              <option value="5_TO_8">5 - 8 triệu</option>
+              <option value="OVER_8">Trên 8 triệu</option>
+            </select>
+          </div>
+
+          <!-- Nút tìm kiếm -->
+          <div class="flex items-end gap-2">
+            <button type="submit" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-br from-brand-100 via-brand-400 to-accent-500 hover:bg-gradient-to-br from-brand-100 via-brand-400 to-accent-500 active:scale-[0.99] text-white font-bold text-sm shadow-md shadow-brand-600/25 transition flex items-center justify-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 105.5 5.5a7.5 7.5 0 0011.15 11.15z" />
+              </svg>
+              Tìm kiếm ngay
+            </button>
+          </div>
+        </div>
+
+        <!-- Bộ lọc nhanh Loại hình / Tiện ích -->
+        <div class="mt-4 pt-4 border-t border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider mr-1">Tiện ích &amp; Loại hình:</span>
+            <button type="button" data-amenity="Khép kín" class="amenity-chip px-3 py-1.5 rounded-full text-xs font-semibold border border-slate-200 bg-slate-50 text-slate-700 hover:border-accent-500 transition">
+              Khép kín
+            </button>
+            <button type="button" data-amenity="Có gác xép" class="amenity-chip px-3 py-1.5 rounded-full text-xs font-semibold border border-slate-200 bg-slate-50 text-slate-700 hover:border-accent-500 transition">
+              Có gác xép
+            </button>
+            <button type="button" data-amenity="Điều hòa" class="amenity-chip px-3 py-1.5 rounded-full text-xs font-semibold border border-slate-200 bg-slate-50 text-slate-700 hover:border-accent-500 transition">
+              Điều hòa
+            </button>
+            <button type="button" data-amenity="Máy giặt" class="amenity-chip px-3 py-1.5 rounded-full text-xs font-semibold border border-slate-200 bg-slate-50 text-slate-700 hover:border-accent-500 transition">
+              Máy giặt
+            </button>
+            <button type="button" data-amenity="Tự do giờ giấc" class="amenity-chip px-3 py-1.5 rounded-full text-xs font-semibold border border-slate-200 bg-slate-50 text-slate-700 hover:border-accent-500 transition">
+              Tự do giờ giấc
+            </button>
+          </div>
+
+          <button id="reset-filters-btn" type="button" class="text-xs font-semibold text-slate-500 hover:text-brand-600 underline self-start md:self-auto">
+            Đặt lại bộ lọc
+          </button>
+        </div>
+      </form>
+
+      <!-- Thống kê nhanh -->
+      <div class="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center max-w-4xl mx-auto">
+        <div class="bg-white/10 backdrop-blur rounded-2xl p-3 border border-white/10">
+          <div class="text-xl sm:text-2xl font-extrabold">1.250+</div>
+          <div class="text-xs text-indigo-100 mt-0.5">Phòng trống cập nhật</div>
+        </div>
+        <div class="bg-white/10 backdrop-blur rounded-2xl p-3 border border-white/10">
+          <div class="text-xl sm:text-2xl font-extrabold">98%</div>
+          <div class="text-xs text-indigo-100 mt-0.5">Chủ trọ xác thực CCCD</div>
+        </div>
+        <div class="bg-white/10 backdrop-blur rounded-2xl p-3 border border-white/10">
+          <div class="text-xl sm:text-2xl font-extrabold">0đ</div>
+          <div class="text-xs text-indigo-100 mt-0.5">Phí môi giới cho khách</div>
+        </div>
+        <div class="bg-white/10 backdrop-blur rounded-2xl p-3 border border-white/10">
+          <div class="text-xl sm:text-2xl font-extrabold">24/7</div>
+          <div class="text-xs text-indigo-100 mt-0.5">Hỗ trợ đặt lịch xem phòng</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. DANH SÁCH PHÒNG TRỌ NỔI BẬT -->
+  <section id="danh-sach-phong" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+      <div>
+        <span class="text-xs font-bold uppercase tracking-wider text-accent-600">Cập nhật theo thời gian thực</span>
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">
+          Danh sách phòng trọ nổi bật
+        </h2>
+        <p id="result-summary" class="text-sm text-slate-600 mt-1">
+          Hiển thị 6 phòng trọ phù hợp
+        </p>
+      </div>
+
+      <!-- Bộ đếm yêu thích & Sắp xếp -->
+      <div class="flex flex-wrap items-center gap-3">
+        <button id="toggle-saved-only-btn" type="button" class="px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-rose-50 hover:border-rose-200 text-xs sm:text-sm font-semibold text-slate-700 transition flex items-center gap-2 shadow-xs">
+          <svg class="w-4 h-4 text-rose-500 fill-current" viewBox="0 0 24 24">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+          </svg>
+          <span>Đã lưu (<span id="saved-count">0</span>)</span>
+        </button>
+
+        <select id="sort-rooms" aria-label="Sắp xếp phòng trọ" class="px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm font-semibold text-slate-700 outline-none focus:border-brand-600 shadow-xs">
+          <option value="featured">Tin VIP &amp; Đề xuất</option>
+          <option value="price-asc">Giá thuê: Thấp đến cao</option>
+          <option value="price-desc">Giá thuê: Cao đến thấp</option>
+          <option value="area-desc">Diện tích: Rộng nhất</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Grid danh sách phòng -->
+    <div id="rooms-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+
+    <!-- Trạng thái rỗng khi không có kết quả -->
+    <div id="empty-rooms-state" class="hidden text-center py-14 px-4 bg-white rounded-2xl border border-dashed border-slate-300 mt-6">
+      <div class="w-14 h-14 mx-auto rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center mb-3">
+        <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 105.5 5.5a7.5 7.5 0 0011.15 11.15z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-bold text-slate-900">Không tìm thấy phòng phù hợp</h3>
+      <p class="text-sm text-slate-500 mt-1 max-w-md mx-auto">
+        Hãy thử mở rộng khoảng giá, bỏ bớt tiện ích lọc hoặc chuyển sang khu vực lân cận.
+      </p>
+      <button type="button" onclick="resetAllFilters()" class="mt-4 px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold transition">
+        Xem tất cả phòng trọ
+      </button>
+    </div>
+  </section>
+
+  <!-- KHU VỰC TÒA NHÀ NỔI BẬT -->
+  <section id="toa-nha-noi-bat" class="bg-white border-y border-slate-200 py-12 sm:py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-8">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-wider text-accent-600">Hệ thống quản lý đồng bộ</span>
+          <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">Tòa nhà &amp; Khu trọ nổi bật</h2>
+        </div>
+        <p class="text-sm text-slate-500">Minh bạch giá điện nước, an ninh vân tay/camera 24/7</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="rounded-2xl border border-slate-200 bg-slate-50/60 p-5 hover:border-brand-300 hover:shadow-md transition">
+          <div class="flex items-center justify-between mb-3">
+            <span class="px-2.5 py-1 rounded-lg bg-accent-500 text-white text-xs font-bold">Hà Nội • Cầu Giấy</span>
+            <span class="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">Còn 4 phòng</span>
+          </div>
+          <h3 class="text-lg font-bold text-slate-900">ATB Residence Xuân Thủy</h3>
+          <p class="text-xs text-slate-500 mt-1">Số 142 Xuân Thủy, Dịch Vọng Hậu, Cầu Giấy, Hà Nội</p>
+          <div class="mt-4 pt-3 border-t border-slate-200/80 flex items-center justify-between text-xs text-slate-600">
+            <span>Giá từ: <strong class="text-accent-600 text-sm">3.800.000đ/th</strong></span>
+            <span>Điện 3.800đ • Nước 30k</span>
+          </div>
+        </div>
+
+        <div class="rounded-2xl border border-slate-200 bg-slate-50/60 p-5 hover:border-brand-300 hover:shadow-md transition">
+          <div class="flex items-center justify-between mb-3">
+            <span class="px-2.5 py-1 rounded-lg bg-accent-500 text-white text-xs font-bold">TP. Hồ Chí Minh • Bình Thạnh</span>
+            <span class="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">Còn 3 phòng</span>
+          </div>
+          <h3 class="text-lg font-bold text-slate-900">ATB Studio D2 Bình Thạnh</h3>
+          <p class="text-xs text-slate-500 mt-1">88 Nguyễn Gia Trí, Phường 25, Bình Thạnh, TP. HCM</p>
+          <div class="mt-4 pt-3 border-t border-slate-200/80 flex items-center justify-between text-xs text-slate-600">
+            <span>Giá từ: <strong class="text-accent-600 text-sm">4.600.000đ/th</strong></span>
+            <span>Điện 4.000đ • Nước 100k/người</span>
+          </div>
+        </div>
+
+        <div class="rounded-2xl border border-slate-200 bg-slate-50/60 p-5 hover:border-brand-300 hover:shadow-md transition">
+          <div class="flex items-center justify-between mb-3">
+            <span class="px-2.5 py-1 rounded-lg bg-accent-500 text-white text-xs font-bold">Huế • Thuận Hóa</span>
+            <span class="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">Còn 5 phòng</span>
+          </div>
+          <h3 class="text-lg font-bold text-slate-900">ATB Garden Trường Chinh</h3>
+          <p class="text-xs text-slate-500 mt-1">54 Trường Chinh, Phường An Cựu, TP. Huế</p>
+          <div class="mt-4 pt-3 border-t border-slate-200/80 flex items-center justify-between text-xs text-slate-600">
+            <span>Giá từ: <strong class="text-accent-600 text-sm">2.600.000đ/th</strong></span>
+            <span>Điện 3.500đ • Nước 25k</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+ 
+
+  <!-- 5. KHU VỰC NỔI BẬT CHO CHỦ TRỌ & CAM KẾT CHỐNG TIN ẢO / PHÁP LÝ -->
+  <section id="danh-cho-chu-tro" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+    <div class="bg-gradient-to-r from-slate-900 to-brand-900 rounded-3xl p-6 sm:p-10 text-white shadow-xl mb-12">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+        <div class="lg:col-span-7">
+          <span class="inline-block px-3 py-1 rounded-full bg-accent-500/20 text-teal-300 text-xs font-bold border border-accent-500/30 mb-3">
+            DÀNH CHO CHỦ TRỌ &amp; NHÀ ĐẦU TƯ
+          </span>
+          <h2 class="text-2xl sm:text-3xl font-extrabold leading-snug">
+            Quản lý phòng trống, bộ sưu tập ảnh &amp; lịch hẹn xem phòng tập trung
+          </h2>
+          <p class="text-slate-300 text-sm sm:text-base mt-3">
+            Đăng tin trực tiếp trên giao diện hiện đại, tải nhiều góc ảnh thực tế, bật/tắt trạng thái phòng chỉ với 1 chạm và tiếp nhận lịch hẹn xem phòng rõ ràng.
+          </p>
+          <div class="mt-6 flex flex-wrap gap-3">
+            <button type="button" onclick="openPostRoomGuide()" class="px-5 py-2.5 rounded-xl bg-accent-500 hover:bg-accent-600 text-white text-sm font-bold transition shadow-md">
+              Đăng tin cho thuê ngay
+            </button>
+            <a href="#cam-ket-phap-ly" class="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-sm font-semibold transition">
+              Xem quy chế vận hành
+            </a>
+          </div>
+        </div>
+
+        <div class="lg:col-span-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="bg-white/10 backdrop-blur rounded-2xl p-4 border border-white/10">
+            <div class="text-sm font-bold text-teal-300">Chủ trọ Xác thực</div>
+            <p class="text-xs text-slate-200 mt-1">Gắn huy hiệu uy tín khi xác minh thông tin chủ sở hữu hoặc hợp đồng quản lý.</p>
+          </div>
+          <div class="bg-white/10 backdrop-blur rounded-2xl p-4 border border-white/10">
+            <div class="text-sm font-bold text-teal-300">Tự động ẩn sau 21 ngày</div>
+            <p class="text-xs text-slate-200 mt-1">Yêu cầu xác nhận còn phòng định kỳ để đảm bảo dữ liệu luôn chính xác.</p>
+          </div>
+          <div class="bg-white/10 backdrop-blur rounded-2xl p-4 border border-white/10">
+            <div class="text-sm font-bold text-teal-300">Ảnh thực tế đa góc nhìn</div>
+            <p class="text-xs text-slate-200 mt-1">Hiển thị đầy đủ không gian phòng, khu bếp, nhà vệ sinh và ban công trước khi hẹn xem.</p>
+          </div>
+          <div class="bg-white/10 backdrop-blur rounded-2xl p-4 border border-white/10">
+            <div class="text-sm font-bold text-teal-300">Báo cáo tin sai sự thật</div>
+            <p class="text-xs text-slate-200 mt-1">Cơ chế tiếp nhận phản hồi từ người tìm thuê để kiểm duyệt và xử lý kịp thời.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cam kết chống tin ảo & Tuân thủ pháp lý -->
+    <div id="cam-ket-phap-ly" class="pt-2">
+      <div class="text-center max-w-2xl mx-auto mb-8">
+        <span class="text-xs font-bold uppercase tracking-wider text-accent-600">Minh bạch &amp; An toàn</span>
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">
+          Cam kết chống tin ảo &amp; Tuân thủ pháp lý
+        </h2>
+        <p class="text-sm text-slate-600 mt-2">
+          ATB LAND xây dựng quy chuẩn vận hành rõ ràng, bảo vệ quyền lợi người thuê, chủ trọ và tuân thủ quy định pháp luật tại Việt Nam.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs">
+          <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold mb-4">01</div>
+          <h3 class="text-base font-bold text-slate-900">Chống tin ảo &amp; Môi giới mạo danh</h3>
+          <p class="text-sm text-slate-600 mt-2 leading-relaxed">
+            Kiểm duyệt nội dung trước khi đăng, yêu cầu xác thực thông tin chủ cho thuê, tự động ẩn tin sau 21 ngày nếu không xác nhận còn trống và hỗ trợ nút báo cáo tin sai sự thật.
+          </p>
+        </div>
+
+        <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs">
+          <div class="w-10 h-10 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center font-bold mb-4">02</div>
+          <h3 class="text-base font-bold text-slate-900">Minh bạch chi phí &amp; Quy chế hoạt động</h3>
+          <p class="text-sm text-slate-600 mt-2 leading-relaxed">
+            Công khai giá thuê, giá điện/nước và tiện ích ngay trên tin đăng; quy định rõ quy trình hẹn xem phòng trực tiếp, trao đổi trực tiếp với chủ trọ và cơ chế hỗ trợ giải quyết khiếu nại.
+          </p>
+        </div>
+
+        <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs">
+          <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold mb-4">03</div>
+          <h3 class="text-base font-bold text-slate-900">Tuân thủ TMĐT &amp; Bảo vệ dữ liệu cá nhân</h3>
+          <p class="text-sm text-slate-600 mt-2 leading-relaxed">
+            Hướng tới đăng ký sàn/website thương mại điện tử theo quy định hiện hành và áp dụng chính sách bảo vệ dữ liệu cá nhân (như họ tên, số điện thoại, lịch hẹn) an toàn, đúng mục đích.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+   <section id="thanh-pho-noi-bat" class="bg-white border-y border-slate-200 py-12 sm:py-16">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-8">
+      <div>
+        <span class="text-xs font-bold uppercase tracking-wider text-accent-600">Phủ sóng khu vực trọng điểm</span>
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">Thành phố nổi bật</h2>
+      </div>
+      <p class="text-sm text-slate-500">Cập nhật quỹ phòng thực tế theo từng khu vực &amp; khoảng giá phổ biến</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="rounded-2xl border border-slate-200 bg-slate-50/60 p-5 hover:border-brand-300 hover:shadow-md transition">
+        <div class="flex items-center justify-between mb-3">
+          <span class="px-2.5 py-1 rounded-lg bg-accent-500 text-white text-xs font-bold">Miền Bắc</span>
+          <span class="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">128 phòng trống</span>
+        </div>
+        <h3 class="text-lg font-bold text-slate-900">Hà Nội</h3>
+        <p class="text-xs text-slate-500 mt-1">Cầu Giấy, Đống Đa, Thanh Xuân, Hai Bà Trưng, Nam Từ Liêm</p>
+        <div class="mt-4 pt-3 border-t border-slate-200/80 flex items-center justify-between text-xs text-slate-600">
+          <span>Phổ biến: <strong class="text-accent-600 text-sm">3.2 – 5.5 triệu/th</strong></span>
+          <span>24 khu trọ</span>
+        </div>
+      </div>
+
+      <div class="rounded-2xl border border-slate-200 bg-slate-50/60 p-5 hover:border-brand-300 hover:shadow-md transition">
+        <div class="flex items-center justify-between mb-3">
+          <span class="px-2.5 py-1 rounded-lg bg-accent-500 text-white text-xs font-bold">Miền Nam</span>
+          <span class="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">96 phòng trống</span>
+        </div>
+        <h3 class="text-lg font-bold text-slate-900">TP. Hồ Chí Minh</h3>
+        <p class="text-xs text-slate-500 mt-1">Bình Thạnh, TP. Thủ Đức, Quận 10, Phú Nhuận, Gò Vấp</p>
+        <div class="mt-4 pt-3 border-t border-slate-200/80 flex items-center justify-between text-xs text-slate-600">
+          <span>Phổ biến: <strong class="text-accent-600 text-sm">3.8 – 6.2 triệu/th</strong></span>
+          <span>19 khu trọ</span>
+        </div>
+      </div>
+
+      <div class="rounded-2xl border border-slate-200 bg-slate-50/60 p-5 hover:border-brand-300 hover:shadow-md transition">
+        <div class="flex items-center justify-between mb-3">
+          <span class="px-2.5 py-1 rounded-lg bg-accent-500 text-white text-xs font-bold">Miền Trung</span>
+          <span class="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">64 phòng trống</span>
+        </div>
+        <h3 class="text-lg font-bold text-slate-900">Huế</h3>
+        <p class="text-xs text-slate-500 mt-1">Thuận Hóa, Phú Xuân, An Cựu, Trường Chinh, Lê Lợi</p>
+        <div class="mt-4 pt-3 border-t border-slate-200/80 flex items-center justify-between text-xs text-slate-600">
+          <span>Phổ biến: <strong class="text-accent-600 text-sm">2.2 – 4.0 triệu/th</strong></span>
+          <span>15 khu trọ</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+  <!-- 6. FOOTER -->
+  <footer class="bg-slate-900 text-slate-300 border-t border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <!-- Thương hiệu -->
+        <div class="lg:col-span-1">
+          <div class="flex items-center gap-2.5 mb-3">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-accent-500 to-accent-500 flex items-center justify-center text-white font-extrabold text-sm">
+              ATB
+            </div>
+            <span class="text-lg font-extrabold text-white tracking-tight">ATB LAND</span>
+          </div>
+          <p class="text-xs sm:text-sm text-slate-400 leading-relaxed">
+            Nền tảng kết nối tìm kiếm phòng trọ, căn hộ dịch vụ và chung cư mini chính chủ, hỗ trợ xem bộ sưu tập ảnh thực tế và đặt lịch hẹn xem phòng minh bạch.
+          </p>
+        </div>
+
+        <!-- Liên kết nhanh -->
+        <div>
+          <h4 class="text-sm font-bold text-white uppercase tracking-wider mb-3">Liên kết nhanh</h4>
+          <ul class="space-y-2 text-sm text-slate-400">
+            <li><a href="#danh-sach-phong" class="hover:text-white transition">Tìm phòng trọ</a></li>
+            <li><a href="#toa-nha-noi-bat" class="hover:text-white transition">Tòa nhà nổi bật</a></li>
+            <li><a href="#danh-cho-chu-tro" class="hover:text-white transition">Dành cho Chủ trọ</a></li>
+            <li><button type="button" onclick="openPostRoomGuide()" class="hover:text-white transition text-left">Đăng tin cho thuê</button></li>
+          </ul>
+        </div>
+
+        <!-- Pháp lý & Quy chế -->
+        <div>
+          <h4 class="text-sm font-bold text-white uppercase tracking-wider mb-3">Quy chế &amp; Pháp lý</h4>
+          <ul class="space-y-2 text-sm text-slate-400">
+            <li><a href="#cam-ket-phap-ly" class="hover:text-white transition">Quy chế hoạt động sàn giao dịch</a></li>
+            <li><a href="#cam-ket-phap-ly" class="hover:text-white transition">Chính sách bảo vệ dữ liệu cá nhân</a></li>
+            <li><a href="#cam-ket-phap-ly" class="hover:text-white transition">Điều khoản đặt lịch xem phòng</a></li>
+            <li><a href="#cam-ket-phap-ly" class="hover:text-white transition">Cơ chế giải quyết khiếu nại</a></li>
+          </ul>
+        </div>
+
+        <!-- Liên hệ -->
+        <div>
+          <h4 class="text-sm font-bold text-white uppercase tracking-wider mb-3">Hỗ trợ ATB LAND</h4>
+          <ul class="space-y-2 text-sm text-slate-400">
+            <li>Email: <span class="text-slate-200">hotro@atbland.vn</span></li>
+            <li>Hotline: <span class="text-slate-200">1900 6868 (08:00 - 21:00)</span></li>
+            <li>Văn phòng: <span class="text-slate-200">Việt Nam</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="mt-10 pt-6 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+        <p>© <span id="current-year">2026</span> ATB LAND. Bản demo giao diện &amp; luồng tương tác.</p>
+        <p>Tuân thủ quy định TMĐT &amp; bảo vệ dữ liệu cá nhân tại Việt Nam.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- MODAL XEM CHI TIẾT PHÒNG & THƯ VIỆN ẢNH LỚN -->
+  <div id="detail-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/70 backdrop-blur-xs p-3 sm:p-5 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="detail-modal-title">
+    <div class="bg-white rounded-3xl max-w-4xl w-full shadow-2xl border border-slate-100 overflow-hidden my-auto">
+      <!-- Header Modal Chi tiết -->
+      <div class="px-5 sm:px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between gap-3">
+        <div>
+          <span id="detail-building-badge" class="inline-block px-2.5 py-0.5 rounded-full text-xs font-bold bg-accent-500 text-white mb-1">
+            TÒA NHÀ ATB LAND
+          </span>
+          <h3 id="detail-modal-title" class="text-lg sm:text-xl font-extrabold text-slate-900">Chi tiết phòng trọ</h3>
+        </div>
+        <button id="close-detail-modal" type="button" aria-label="Đóng chi tiết phòng" class="p-2 rounded-xl text-slate-500 hover:bg-slate-200/70 hover:text-slate-800 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="p-5 sm:p-6 space-y-5 max-h-[82vh] overflow-y-auto">
+        <!-- Thư viện ảnh lớn có nút chuyển ảnh & thumbnail -->
+        <div class="space-y-3">
+          <div class="relative aspect-[16/9] sm:aspect-[16/8] rounded-2xl bg-slate-100 overflow-hidden border border-slate-200">
+            <img
+              id="detail-main-image"
+              src=""
+              alt=""
+              class="w-full h-full object-cover transition duration-300"
+            />
+            <button
+              id="detail-prev-photo-btn"
+              type="button"
+              aria-label="Ảnh trước"
+              class="absolute left-3 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-white/90 hover:bg-white text-slate-800 shadow-md transition"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <button
+              id="detail-next-photo-btn"
+              type="button"
+              aria-label="Ảnh tiếp theo"
+              class="absolute right-3 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-white/90 hover:bg-white text-slate-800 shadow-md transition"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+
+            <div class="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-2 pointer-events-none">
+              <span id="detail-photo-caption" class="px-3 py-1 rounded-full bg-slate-900/75 text-white text-xs font-semibold backdrop-blur-xs">
+                Không gian phòng
+              </span>
+              <span id="detail-photo-counter" class="px-3 py-1 rounded-full bg-slate-900/75 text-white text-xs font-bold backdrop-blur-xs">
+                1 / 4
+              </span>
+            </div>
+          </div>
+
+          <!-- Dải thumbnail chọn ảnh nhanh -->
+          <div id="detail-thumbnails" class="grid grid-cols-4 sm:grid-cols-6 gap-2.5"></div>
+        </div>
+
+        <!-- Thông tin giá, diện tích, điện nước & mô tả -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="md:col-span-2 space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div id="detail-price-text" class="text-2xl font-extrabold text-accent-600"></div>
+              <div id="detail-status-badge"></div>
+            </div>
+            <p id="detail-address-text" class="text-sm text-slate-600 font-medium"></p>
+            <p id="detail-description-text" class="text-sm text-slate-600 leading-relaxed"></p>
+            <div id="detail-amenities-list" class="flex flex-wrap gap-2 pt-1"></div>
+          </div>
+
+          <div class="rounded-2xl bg-slate-50 border border-slate-200 p-4 space-y-2.5 text-sm">
+            <div class="font-bold text-slate-900 border-b border-slate-200 pb-2">Thông số &amp; Chi phí minh bạch</div>
+            <div class="flex justify-between">
+              <span class="text-slate-500">Diện tích:</span>
+              <strong id="detail-area-text" class="text-slate-800"></strong>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-500">Giá điện:</span>
+              <strong id="detail-elec-text" class="text-slate-800"></strong>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-500">Giá nước:</span>
+              <strong id="detail-water-text" class="text-slate-800"></strong>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-500">Chủ cho thuê:</span>
+              <strong id="detail-host-text" class="text-emerald-700"></strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer Modal Chi tiết -->
+      <div class="px-5 sm:px-6 py-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <button id="detail-toggle-save-btn" type="button" class="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-rose-50 text-sm font-semibold text-slate-700 transition">
+          Lưu phòng yêu thích
+        </button>
+        <button id="detail-book-viewing-btn" type="button" class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-accent-500 hover:bg-accent-500 text-white text-sm font-bold shadow-md transition">
+          Đặt lịch hẹn xem phòng ngay
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. MODAL ĐẶT LỊCH XEM PHÒNG TRỰC TIẾP -->
+  <div id="booking-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/60 backdrop-blur-xs p-4 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="booking-modal-title">
+    <div class="bg-white rounded-3xl max-w-xl w-full shadow-2xl border border-slate-100 overflow-hidden my-auto">
+      <!-- Header Modal -->
+      <div class="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+        <div>
+          <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-bold bg-brand-100 text-brand-700 mb-1">
+            ĐẶT LỊCH XEM PHÒNG TRỰC TIẾP
+          </span>
+          <h3 id="booking-modal-title" class="text-lg font-extrabold text-slate-900">Đặt lịch hẹn xem phòng</h3>
+        </div>
+        <button id="close-booking-modal" type="button" aria-label="Đóng cửa sổ" class="p-2 rounded-xl text-slate-500 hover:bg-slate-200/70 hover:text-slate-800 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Thông tin tóm tắt phòng được chọn -->
+      <div id="selected-room-summary" class="px-6 py-3.5 bg-brand-50/60 border-b border-brand-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-sm"></div>
+
+      <!-- Form Đặt lịch xem phòng -->
+      <form id="booking-form" class="p-6 space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label for="tenant-name" class="block text-xs font-bold text-slate-700 mb-1">Họ và tên khách xem phòng *</label>
+            <input id="tenant-name" type="text" required placeholder="Nguyễn Minh Anh" class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm focus:border-brand-600 focus:ring-2 focus:ring-brand-100 outline-none" />
+          </div>
+          <div>
+            <label for="tenant-phone" class="block text-xs font-bold text-slate-700 mb-1">Số điện thoại liên hệ *</label>
+            <input id="tenant-phone" type="tel" required placeholder="0912 345 678" class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm focus:border-brand-600 focus:ring-2 focus:ring-brand-100 outline-none" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label for="viewing-date" class="block text-xs font-bold text-slate-700 mb-1">Ngày hẹn xem phòng *</label>
+            <input id="viewing-date" type="date" required class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm focus:border-brand-600 focus:ring-2 focus:ring-brand-100 outline-none" />
+          </div>
+          <div>
+            <label for="viewing-slot" class="block text-xs font-bold text-slate-700 mb-1">Khung giờ mong muốn</label>
+            <select id="viewing-slot" class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm focus:border-brand-600 focus:ring-2 focus:ring-brand-100 outline-none bg-white">
+              <option value="09:00 - 10:30">09:00 - 10:30 (Sáng)</option>
+              <option value="14:00 - 15:30">14:00 - 15:30 (Chiều)</option>
+              <option value="17:30 - 19:00">17:30 - 19:00 (Sau giờ làm)</option>
+              <option value="19:30 - 21:00">19:30 - 21:00 (Tối)</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label for="booking-note" class="block text-xs font-bold text-slate-700 mb-1">Ghi chú thêm cho chủ trọ</label>
+          <textarea id="booking-note" rows="2" placeholder="Ví dụ: Tôi đi xe máy, cần hỏi thêm về giờ giấc hoặc chỗ để xe..." class="w-full rounded-xl border border-slate-300 px-3.5 py-2 text-sm focus:border-brand-600 focus:ring-2 focus:ring-brand-100 outline-none"></textarea>
+        </div>
+
+        <div class="pt-2 flex flex-col-reverse sm:flex-row items-center justify-end gap-3 border-t border-slate-100">
+          <button id="cancel-booking-btn" type="button" class="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-700 hover:bg-slate-100 transition">
+            Hủy bỏ
+          </button>
+          <button id="submit-booking-btn" type="submit" class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold shadow-md transition">
+            Xác nhận đặt lịch xem phòng
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL HỖ TRỢ ĐĂNG TIN / ĐĂNG NHẬP DEMO -->
+  <div id="info-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/60 backdrop-blur-xs p-4" role="dialog" aria-modal="true">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100">
+      <div class="flex items-start justify-between gap-3 mb-3">
+        <h3 id="info-modal-title" class="text-lg font-extrabold text-slate-900">Thông báo ATB LAND</h3>
+        <button id="close-info-modal" type="button" aria-label="Đóng" class="p-1.5 rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <p id="info-modal-desc" class="text-sm text-slate-600 leading-relaxed"></p>
+      <div class="mt-5 flex justify-end">
+        <button id="confirm-info-modal" type="button" class="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold transition">
+          Đã hiểu
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Dữ liệu mẫu danh sách phòng trọ ATB LAND kèm bộ sưu tập hình ảnh thực tế nhiều góc
+    const ROOMS_DATA = [
+      {
+        id: 'room-101',
+        title: 'Phòng Studio Full Nội Thất Gần ĐH Quốc Gia',
+        building: 'ATB Residence Xuân Thủy',
+        hostName: 'Anh Trần Quốc Bảo (Chủ trọ xác thực)',
+        city: 'Hà Nội',
+        district: 'Cầu Giấy',
+        address: '142 Xuân Thủy, Dịch Vọng Hậu, Cầu Giấy',
+        price: 4200000,
+        area: 28,
+        electricity: '3.800đ/số',
+        water: '30.000đ/m³',
+        badge: 'Tin VIP',
+        verified: true,
+        status: 'AVAILABLE',
+        featuredScore: 100,
+        description: 'Căn studio vuông vắn, cửa sổ lớn đón ánh sáng tự nhiên, trang bị sẵn giường, tủ đồ, điều hòa, nóng lạnh và khu bếp riêng biệt.',
+        amenities: ['Khép kín', 'Điều hòa', 'Máy giặt', 'Tự do giờ giấc'],
+        gallery: [
+          {
+            label: 'Toàn cảnh phòng ngủ',
+            url: 'https://tromoi.com/storage/legacy_uploads/static/phong_tro_hue/1.25.35%20Ng%E1%BB%B1%20Binh/1_25_35%20Ng%E1%BB%B1%20Binh%20h3.jpg'
+          },
+          {
+            label: 'Khu bếp & bàn ăn',
+            url: 'https://tromoi.com/storage/legacy_uploads/static/phong_tro_hue/1.25.35%20Ng%E1%BB%B1%20Binh/1_25_35%20Ng%E1%BB%B1%20Binh%20h2.jpg'
+          },
+          {
+            label: 'Nhà tắm khép kín',
+            url: 'https://placehold.co/800x520/f0fdfa/0f766e?text=Phong+Studio+Cau+Giay+-+Nha+Tam'
+          },
+          {
+            label: 'Ban công thoáng mát',
+            url: 'https://placehold.co/800x520/fef3c7/92400e?text=Phong+Studio+Cau+Giay+-+Ban+Cong'
+          }
+        ],
+        fallbackImage: 'https://placehold.co/800x520/e2e8f0/1e293b?text=Phong+Tro+ATB+LAND'
+      },
+      {
+        id: 'room-102',
+        title: 'Phòng Trọ Có Gác Xép Rộng Thoáng, Giờ Tự Do',
+        building: 'Nhà trọ An Phát',
+        hostName: 'Cô Lê Thị Mai (Chủ trọ xác thực)',
+        city: 'Hà Nội',
+        district: 'Đống Đa',
+        address: '29 Ngõ 178 Tây Sơn, Trung Liệt, Đống Đa',
+        price: 2850000,
+        area: 22,
+        electricity: '3.800đ/số',
+        water: '80.000đ/người',
+        badge: 'Chủ trọ Xác thực',
+        verified: true,
+        status: 'AVAILABLE',
+        featuredScore: 88,
+        description: 'Phòng trọ có gác xép gỗ chắc chắn cao ráo, phù hợp cho sinh viên hoặc nhân viên văn phòng, ngõ rộng xe máy ra vào thuận tiện.',
+        amenities: ['Khép kín', 'Có gác xép', 'Tự do giờ giấc'],
+        gallery: [
+          {
+            label: 'Không gian phòng & gác xép',
+            url: 'https://tromoi.com/storage/legacy_uploads/static/phong_tro_hue/131%20Tr%E1%BA%A7n%20Phu/131_tran_phu_h1.jpg'
+          },
+          {
+            label: 'Góc bếp nhỏ gọn',
+            url: 'https://placehold.co/800x520/eef2ff/3730a3?text=Gac+Xep+Dong+Da+-+Goc+Bep'
+          },
+          {
+            label: 'Nhà vệ sinh riêng',
+            url: 'https://placehold.co/800x520/e0e7ff/3730a3?text=Gac+Xep+Dong+Da+-+Nha+Ve+Sinh'
+          }
+        ],
+        fallbackImage: 'https://placehold.co/800x520/e2e8f0/1e293b?text=Phong+Tro+ATB+LAND'
+      },
+      {
+        id: 'room-201',
+        title: 'Căn Hộ Dịch Vụ Ban Công Nắng Đẹp Gần Hàng Xanh',
+        building: 'ATB Studio D2 Bình Thạnh',
+        hostName: 'Anh Đỗ Hoàng Nam (Chủ trọ xác thực)',
+        city: 'TP. Hồ Chí Minh',
+        district: 'Bình Thạnh',
+        address: '88 Nguyễn Gia Trí, Phường 25, Bình Thạnh',
+        price: 5400000,
+        area: 32,
+        electricity: '4.000đ/số',
+        water: '100.000đ/người',
+        badge: 'Tin VIP',
+        verified: true,
+        status: 'AVAILABLE',
+        featuredScore: 96,
+        description: 'Căn hộ dịch vụ hiện đại, ban công rộng phơi đồ thoải mái, thang máy và khóa vân tay an ninh, gần tuyến Metro và các trường đại học.',
+        amenities: ['Khép kín', 'Điều hòa', 'Máy giặt', 'Tự do giờ giấc'],
+        gallery: [
+          {
+            label: 'Phòng khách & giường ngủ',
+            url: 'https://tromoi.com/storage/legacy_uploads/static/phong_tro_hue/131%20Tr%E1%BA%A7n%20Phu/131_tran_phu_h4.jpg'
+          },
+          {
+            label: 'Ban công nhiều ánh sáng',
+            url: 'https://placehold.co/800x520/fef9c3/854d0e?text=Binh+Thanh+HCM+-+Ban+Cong'
+          },
+          {
+            label: 'Khu bếp nấu ăn',
+            url: 'https://placehold.co/800x520/dcfce7/166534?text=Binh+Thanh+HCM+-+Khu+Bep'
+          },
+          {
+            label: 'Phòng tắm hiện đại',
+            url: 'https://placehold.co/800x520/e0f2fe/0369a1?text=Binh+Thanh+HCM+-+Phong+Tam'
+          }
+        ],
+        fallbackImage: 'https://placehold.co/800x520/e2e8f0/1e293b?text=Phong+Tro+ATB+LAND'
+      },
+      {
+        id: 'room-202',
+        title: 'Phòng Mới Xây Gần Khu Công Nghệ Cao Thủ Đức',
+        building: 'Khu trọ SunHome',
+        hostName: 'Chị Phạm Thu Hà (Chủ trọ xác thực)',
+        city: 'TP. Hồ Chí Minh',
+        district: 'TP. Thủ Đức',
+        address: '19 Đường D1, Tăng Nhơn Phú B, TP. Thủ Đức',
+        price: 3500000,
+        area: 25,
+        electricity: '3.900đ/số',
+        water: '25.000đ/m³',
+        badge: 'Chủ trọ Xác thực',
+        verified: true,
+        status: 'RENTED',
+        featuredScore: 80,
+        description: 'Phòng mới xây sạch sẽ, có gác xép tiện lợi, camera hành lang 24/7, thuận tiện di chuyển về Khu Công Nghệ Cao và Xa Lộ Hà Nội.',
+        amenities: ['Khép kín', 'Có gác xép', 'Điều hòa'],
+        gallery: [
+          {
+            label: 'Không gian phòng mới',
+            url: 'https://tromoi.com/storage/legacy_uploads/static/phong_tro_hue/Xuan%20Hoa/xuan_hoa_h4.jpg'
+          },
+          {
+            label: 'Khu bếp & chậu rửa',
+            url: 'https://placehold.co/800x520/f1f5f9/334155?text=Thu+Duc+HCM+-+Khu+Bep'
+          },
+          {
+            label: 'Nhà tắm ốp gạch sạch sẽ',
+            url: 'https://placehold.co/800x520/e0f2fe/0369a1?text=Thu+Duc+HCM+-+Nha+Tam'
+          }
+        ],
+        fallbackImage: 'https://placehold.co/800x520/e2e8f0/1e293b?text=Phong+Tro+ATB+LAND'
+      },
+      {
+        id: 'room-301',
+        title: 'Căn Hộ Mini Gần Biển Mỹ Khê, Đầy Đủ Tiện Nghi',
+        building: 'Sơn Trà Cozy House',
+        hostName: 'Anh Nguyễn Văn Khang (Chủ trọ xác thực)',
+        city: 'Đà Nẵng',
+        district: 'Sơn Trà',
+        address: '64 Phạm Văn Đồng, An Hải Bắc, Sơn Trà',
+        price: 4600000,
+        area: 30,
+        electricity: '3.700đ/số',
+        water: '22.000đ/m³',
+        badge: 'Chủ trọ Xác thực',
+        verified: true,
+        status: 'AVAILABLE',
+        featuredScore: 85,
+        description: 'Căn hộ mini thoáng gió biển, đầy đủ tiện nghi cơ bản, cách bãi biển Mỹ Khê vài phút đi bộ, khu dân cư văn minh.',
+        amenities: ['Khép kín', 'Điều hòa', 'Máy giặt', 'Tự do giờ giấc'],
+        gallery: [
+          {
+            label: 'Không gian căn hộ mini',
+            url: 'https://tromoi.com/storage/legacy_uploads/static/phong_tro_hue/04%20Ton%20Th%E1%BA%A5t%20B%E1%BA%ADt/04_ton_that_bat_h3.jpg'
+          },
+          {
+            label: 'Bếp & tủ lạnh',
+            url: 'https://placehold.co/800x520/f0fdfa/0f766e?text=Son+Tra+Da+Nang+-+Khu+Bep'
+          },
+          {
+            label: 'Ban công đón gió',
+            url: 'https://placehold.co/800x520/eef2ff/3730a3?text=Son+Tra+Da+Nang+-+Ban+Cong'
+          }
+        ],
+        fallbackImage: 'https://placehold.co/800x520/e2e8f0/1e293b?text=Phong+Tro+ATB+LAND'
+      },
+      {
+        id: 'room-401',
+        title: 'Phòng Trọ Yên Tĩnh Gần Đại Học Khoa Học Huế',
+        building: 'ATB Garden Trường Chinh',
+        hostName: 'Chị Hoàng Ngọc Lan (Chủ trọ xác thực)',
+        city: 'Huế',
+        district: 'Thuận Hóa',
+        address: '54 Trường Chinh, Phường An Cựu, TP. Huế',
+        price: 2450000,
+        area: 21,
+        electricity: '3.500đ/số',
+        water: '25.000đ/m³',
+        badge: 'Chủ trọ Xác thực',
+        verified: true,
+        status: 'AVAILABLE',
+        featuredScore: 82,
+        description: 'Phòng trọ yên tĩnh, nhiều cây xanh, có gác xép và khu vệ sinh khép kín, rất phù hợp cho sinh viên và người đi làm tại Huế.',
+        amenities: ['Khép kín', 'Có gác xép', 'Tự do giờ giấc'],
+        gallery: [
+          {
+            label: 'Phòng trọ & gác xép',
+            url: 'https://tromoi.com/storage/legacy_uploads/static/phong_tro_hue/16%20Tr%E1%BA%A7n%20Khanh%20Du/16_tran_khanh_du_h1.jpg'
+          },
+          {
+            label: 'Sân vườn & lối đi',
+            url: 'https://placehold.co/800x520/dcfce7/166534?text=An+Cuu+Hue+-+San+Vuon'
+          },
+          {
+            label: 'Khu bếp & nhà tắm',
+            url: 'https://placehold.co/800x520/eef2ff/3730a3?text=An+Cuu+Hue+-+Bep+Va+Nha+Tam'
+          }
+        ],
+        fallbackImage: 'https://placehold.co/800x520/e2e8f0/1e293b?text=Phong+Tro+ATB+LAND'
+      }
+    ];
+
+    // Danh sách Quận/Huyện theo Tỉnh/Thành phố
+    const DISTRICTS_BY_CITY = {
+      'Hà Nội': ['Cầu Giấy', 'Đống Đa'],
+      'TP. Hồ Chí Minh': ['Bình Thạnh', 'TP. Thủ Đức'],
+      'Đà Nẵng': ['Sơn Trà'],
+      'Huế': ['Thuận Hóa']
+    };
+
+    // Trạng thái ứng dụng
+    const state = {
+      city: 'ALL',
+      district: 'ALL',
+      priceRange: 'ALL',
+      selectedAmenities: new Set(),
+      sortBy: 'featured',
+      savedRoomIds: new Set(),
+      showOnlySaved: false,
+      cardPhotoIndex: {},
+      activeBookingRoomId: null,
+      activeDetailRoomId: null,
+      activeDetailPhotoIndex: 0
+    };
+
+    // Khởi tạo chỉ số ảnh hiện tại cho từng thẻ phòng
+    ROOMS_DATA.forEach((room) => {
+      state.cardPhotoIndex[room.id] = 0;
+    });
+
+    // Định dạng tiền VNĐ
+    function formatVND(amount) {
+      return new Intl.NumberFormat('vi-VN').format(amount) + 'đ';
+    }
+
+    // Hiển thị thông báo dạng Toast (không dùng alert)
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      const styles = type === 'success'
+        ? 'bg-slate-900 text-white border-emerald-500'
+        : 'bg-slate-900 text-white border-amber-400';
+
+      toast.className = `pointer-events-auto border-l-4 ${styles} rounded-2xl px-4 py-3 shadow-xl text-xs sm:text-sm font-medium flex items-center justify-between gap-3 transition duration-300`;
+      toast.innerHTML = `
+        <span>${message}</span>
+        <button type="button" aria-label="Đóng thông báo" class="text-slate-400 hover:text-white font-bold">✕</button>
+      `;
+
+      const closeBtn = toast.querySelector('button');
+      closeBtn.addEventListener('click', () => toast.remove());
+
+      container.appendChild(toast);
+      setTimeout(() => {
+        if (toast.parentElement) toast.remove();
+      }, 4200);
+    }
+
+    // Cập nhật danh sách Quận/Huyện dựa theo Tỉnh/Thành phố
+    function populateDistrictOptions(selectedCity) {
+      const districtSelect = document.getElementById('filter-district');
+      districtSelect.innerHTML = '<option value="ALL">Tất cả Quận / Huyện</option>';
+
+      const citiesToInclude = selectedCity === 'ALL'
+        ? Object.keys(DISTRICTS_BY_CITY)
+        : [selectedCity];
+
+      citiesToInclude.forEach((city) => {
+        const districts = DISTRICTS_BY_CITY[city] || [];
+        districts.forEach((dist) => {
+          const opt = document.createElement('option');
+          opt.value = dist;
+          opt.textContent = selectedCity === 'ALL' ? `${dist} (${city})` : dist;
+          districtSelect.appendChild(opt);
+        });
+      });
+    }
+
+    // Kiểm tra khoảng giá
+    function matchesPriceRange(price, range) {
+      if (range === 'UNDER_3') return price < 3000000;
+      if (range === '3_TO_5') return price >= 3000000 && price <= 5000000;
+      if (range === '5_TO_8') return price > 5000000 && price <= 8000000;
+      if (range === 'OVER_8') return price > 8000000;
+      return true;
+    }
+
+    // Lọc và sắp xếp danh sách phòng
+    function getFilteredRooms() {
+      const filtered = ROOMS_DATA.filter((room) => {
+        if (state.showOnlySaved && !state.savedRoomIds.has(room.id)) return false;
+        if (state.city !== 'ALL' && room.city !== state.city) return false;
+        if (state.district !== 'ALL' && room.district !== state.district) return false;
+        if (!matchesPriceRange(room.price, state.priceRange)) return false;
+
+        if (state.selectedAmenities.size > 0) {
+          for (const amenity of state.selectedAmenities) {
+            if (!room.amenities.includes(amenity)) return false;
+          }
+        }
+        return true;
+      });
+
+      return filtered.sort((a, b) => {
+        if (state.sortBy === 'price-asc') return a.price - b.price;
+        if (state.sortBy === 'price-desc') return b.price - a.price;
+        if (state.sortBy === 'area-desc') return b.area - a.area;
+        return b.featuredScore - a.featuredScore;
+      });
+    }
+
+    // Chuyển ảnh trước/sau trên từng thẻ phòng
+    function changeCardPhoto(event, roomId, delta) {
+      event.stopPropagation();
+      const room = ROOMS_DATA.find((r) => r.id === roomId);
+      if (!room || !room.gallery.length) return;
+      const total = room.gallery.length;
+      const current = state.cardPhotoIndex[roomId] || 0;
+      state.cardPhotoIndex[roomId] = (current + delta + total) % total;
+      renderRooms();
+    }
+
+    // Chọn trực tiếp ảnh qua chấm chỉ báo trên thẻ phòng
+    function selectCardPhoto(event, roomId, index) {
+      event.stopPropagation();
+      state.cardPhotoIndex[roomId] = index;
+      renderRooms();
+    }
+
+    // Render thẻ phòng trọ
+    function renderRooms() {
+      const grid = document.getElementById('rooms-grid');
+      const emptyState = document.getElementById('empty-rooms-state');
+      const summary = document.getElementById('result-summary');
+      const savedCountEl = document.getElementById('saved-count');
+
+      savedCountEl.textContent = state.savedRoomIds.size;
+
+      const rooms = getFilteredRooms();
+      summary.textContent = state.showOnlySaved
+        ? `Đang hiển thị ${rooms.length} phòng trong danh sách yêu thích`
+        : `Hiển thị ${rooms.length} phòng trọ phù hợp`;
+
+      if (rooms.length === 0) {
+        grid.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+
+      grid.innerHTML = rooms.map((room) => {
+        const isSaved = state.savedRoomIds.has(room.id);
+        const isRented = room.status === 'RENTED';
+        const totalPhotos = room.gallery.length;
+        const currentIdx = Math.min(state.cardPhotoIndex[room.id] || 0, totalPhotos - 1);
+        const currentPhoto = room.gallery[currentIdx];
+
+        const statusBadge = isRented
+          ? `<span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-100 text-rose-700 border border-rose-200">Đã cho thuê</span>`
+          : `<span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">Còn phòng</span>`;
+
+        const topBadgeClass = room.badge === 'Tin VIP'
+          ? 'bg-amber-500 text-white'
+          : 'bg-accent-600 text-white';
+
+        const amenitiesHtml = room.amenities.slice(0, 4).map((item) =>
+          `<span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[11px] font-medium">${item}</span>`
+        ).join('');
+
+        const dotsHtml = room.gallery.map((_, idx) =>
+          `<button
+            type="button"
+            onclick="selectCardPhoto(event, '${room.id}', ${idx})"
+            aria-label="Xem ảnh ${idx + 1}"
+            class="h-1.5 rounded-full transition-all ${idx === currentIdx ? 'w-5 bg-white' : 'w-1.5 bg-white/60 hover:bg-white/90'}"
+          ></button>`
+        ).join('');
+
+        return `
+          <article class="bg-white rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-lg transition overflow-hidden flex flex-col justify-between group">
+            <div>
+              <!-- Bộ sưu tập ảnh trên thẻ phòng -->
+              <div onclick="openDetailModal('${room.id}', ${currentIdx})" class="relative aspect-[16/10] bg-slate-100 overflow-hidden cursor-pointer">
+                <img
+                  src="${currentPhoto.url}"
+                  alt="${room.title} - ${currentPhoto.label}"
+                  loading="lazy"
+                  onerror="this.onerror=null;this.src='${room.fallbackImage}';"
+                  class="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                />
+
+                <!-- Huy hiệu trạng thái & tin -->
+                <div class="absolute top-3 left-3 flex flex-wrap items-center gap-1.5">
+                  <span class="px-2.5 py-1 rounded-lg text-xs font-bold shadow-xs ${topBadgeClass}">${room.badge}</span>
+                  ${statusBadge}
+                </div>
+
+                <!-- Nút lưu yêu thích -->
+                <button
+                  type="button"
+                  onclick="event.stopPropagation(); toggleSaveRoom('${room.id}')"
+                  aria-label="${isSaved ? 'Bỏ lưu phòng' : 'Lưu phòng yêu thích'}"
+                  class="absolute top-3 right-3 p-2.5 rounded-full bg-white/95 hover:bg-white shadow-md transition ${isSaved ? 'text-rose-500' : 'text-slate-400 hover:text-rose-500'}"
+                >
+                  <svg class="w-4 h-4 ${isSaved ? 'fill-current' : ''}" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
+                </button>
+
+                <!-- Nút chuyển ảnh trước / sau -->
+                <button
+                  type="button"
+                  onclick="changeCardPhoto(event, '${room.id}', -1)"
+                  aria-label="Ảnh trước"
+                  class="absolute left-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-slate-900/60 hover:bg-slate-900/80 text-white transition"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  onclick="changeCardPhoto(event, '${room.id}', 1)"
+                  aria-label="Ảnh tiếp theo"
+                  class="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-slate-900/60 hover:bg-slate-900/80 text-white transition"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+
+                <!-- Chấm chỉ báo & bộ đếm ảnh -->
+                <div class="absolute bottom-2.5 left-3 right-3 flex items-center justify-between gap-2">
+                  <div class="flex items-center gap-1.5 bg-slate-950/55 px-2.5 py-1.5 rounded-full backdrop-blur-xs">
+                    ${dotsHtml}
+                  </div>
+                  <span class="px-2.5 py-1 rounded-full bg-slate-950/70 text-white text-[11px] font-bold backdrop-blur-xs">
+                    ${currentIdx + 1}/${totalPhotos}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Nội dung phòng -->
+              <div class="p-4 sm:p-5">
+                <div class="flex items-baseline justify-between gap-2">
+                  <div class="text-lg sm:text-xl font-extrabold text-accent-600">
+                    ${formatVND(room.price)}<span class="text-xs font-medium text-slate-500">/tháng</span>
+                  </div>
+                  <span class="text-xs font-bold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg">${room.area} m²</span>
+                </div>
+
+                <h3 onclick="openDetailModal('${room.id}', ${currentIdx})" class="text-base font-bold text-slate-900 mt-2 line-clamp-2 group-hover:text-accent-600 transition cursor-pointer">
+                  ${room.title}
+                </h3>
+
+                <p class="text-xs text-slate-500 mt-1.5 flex items-start gap-1">
+                  <svg class="w-4 h-4 text-slate-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span>${room.address}, ${room.district}, ${room.city}</span>
+                </p>
+
+                <!-- Giá điện / nước -->
+                <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
+                  <span>Điện: <strong class="text-slate-800">${room.electricity}</strong></span>
+                  <span>Nước: <strong class="text-slate-800">${room.water}</strong></span>
+                  <span>Góc: <strong class="text-slate-800">${currentPhoto.label}</strong></span>
+                </div>
+
+                <!-- Tiện ích -->
+                <div class="mt-3 flex flex-wrap gap-1.5">
+                  ${amenitiesHtml}
+                </div>
+              </div>
+            </div>
+
+            <!-- Nút xem chi tiết & đặt lịch xem phòng -->
+            <div class="px-4 sm:px-5 pb-4 sm:pb-5 pt-2 grid grid-cols-2 gap-2.5">
+              <button
+                type="button"
+                onclick="openDetailModal('${room.id}', ${currentIdx})"
+                class="py-2.5 px-3 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs sm:text-sm font-bold transition"
+              >
+                Xem chi tiết
+              </button>
+              <button
+                type="button"
+                ${isRented ? 'disabled' : `onclick="openBookingModal('${room.id}')"`}
+                class="py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold transition ${
+                  isRented
+                    ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                    : 'bg-accent-500 hover:bg-accent-600 text-white shadow-xs'
+                }"
+              >
+                ${isRented ? 'Đã cho thuê' : 'Đặt lịch xem phòng'}
+              </button>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    // Mở Modal Xem chi tiết phòng & thư viện ảnh lớn
+    function openDetailModal(roomId, photoIdx = 0) {
+      const room = ROOMS_DATA.find((r) => r.id === roomId);
+      if (!room) return;
+
+      state.activeDetailRoomId = roomId;
+      state.activeDetailPhotoIndex = Math.max(0, Math.min(photoIdx, room.gallery.length - 1));
+
+      document.getElementById('detail-building-badge').textContent = `${room.building} • ${room.district}`;
+      document.getElementById('detail-modal-title').textContent = room.title;
+      document.getElementById('detail-price-text').innerHTML = `${formatVND(room.price)}<span class="text-sm font-medium text-slate-500">/tháng</span>`;
+      document.getElementById('detail-address-text').textContent = `${room.address}, ${room.district}, ${room.city}`;
+      document.getElementById('detail-description-text').textContent = room.description;
+      document.getElementById('detail-area-text').textContent = `${room.area} m²`;
+      document.getElementById('detail-elec-text').textContent = room.electricity;
+      document.getElementById('detail-water-text').textContent = room.water;
+      document.getElementById('detail-host-text').textContent = room.hostName;
+
+      const isRented = room.status === 'RENTED';
+      document.getElementById('detail-status-badge').innerHTML = isRented
+        ? `<span class="px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-700">Đã cho thuê</span>`
+        : `<span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">Còn phòng trống</span>`;
+
+      document.getElementById('detail-amenities-list').innerHTML = room.amenities.map((item) =>
+        `<span class="px-3 py-1 rounded-full bg-brand-50 text-brand-700 text-xs font-semibold border border-brand-100">${item}</span>`
+      ).join('');
+
+      const saveBtn = document.getElementById('detail-toggle-save-btn');
+      const isSaved = state.savedRoomIds.has(room.id);
+      saveBtn.textContent = isSaved ? 'Đã lưu phòng yêu thích' : 'Lưu phòng yêu thích';
+
+      const bookBtn = document.getElementById('detail-book-viewing-btn');
+      bookBtn.disabled = isRented;
+      bookBtn.textContent = isRented ? 'Phòng đã cho thuê' : 'Đặt lịch hẹn xem phòng ngay';
+      bookBtn.className = isRented
+        ? 'w-full sm:w-auto px-5 py-2.5 rounded-xl bg-slate-200 text-slate-500 text-sm font-bold cursor-not-allowed'
+        : 'w-full sm:w-auto px-5 py-2.5 rounded-xl bg-accent-600 hover:bg-accent-700 text-white text-sm font-bold shadow-md transition';
+
+      renderDetailGallery();
+
+      const modal = document.getElementById('detail-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    // Cập nhật ảnh lớn & dải thumbnail trong modal chi tiết
+    function renderDetailGallery() {
+      const room = ROOMS_DATA.find((r) => r.id === state.activeDetailRoomId);
+      if (!room || !room.gallery.length) return;
+
+      const total = room.gallery.length;
+      const idx = Math.max(0, Math.min(state.activeDetailPhotoIndex, total - 1));
+      state.activeDetailPhotoIndex = idx;
+
+      const currentPhoto = room.gallery[idx];
+      const mainImg = document.getElementById('detail-main-image');
+      mainImg.src = currentPhoto.url;
+      mainImg.alt = `${room.title} - ${currentPhoto.label}`;
+      mainImg.onerror = () => {
+        mainImg.onerror = null;
+        mainImg.src = room.fallbackImage;
+      };
+
+      document.getElementById('detail-photo-caption').textContent = currentPhoto.label;
+      document.getElementById('detail-photo-counter').textContent = `${idx + 1} / ${total}`;
+
+      const thumbsContainer = document.getElementById('detail-thumbnails');
+      thumbsContainer.innerHTML = room.gallery.map((photo, i) => {
+        const activeClass = i === idx
+          ? 'ring-2 ring-brand-600 border-brand-600 opacity-100'
+          : 'border-slate-200 opacity-75 hover:opacity-100';
+        return `
+          <button
+            type="button"
+            onclick="selectDetailPhoto(${i})"
+            class="group relative aspect-[16/10] rounded-xl overflow-hidden border transition ${activeClass}"
+            title="${photo.label}"
+          >
+            <img
+              src="${photo.url}"
+              alt="${photo.label}"
+              onerror="this.onerror=null;this.src='${room.fallbackImage}';"
+              class="w-full h-full object-cover"
+            />
+          </button>
+        `;
+      }).join('');
+    }
+
+    function changeDetailPhoto(delta) {
+      const room = ROOMS_DATA.find((r) => r.id === state.activeDetailRoomId);
+      if (!room || !room.gallery.length) return;
+      const total = room.gallery.length;
+      state.activeDetailPhotoIndex = (state.activeDetailPhotoIndex + delta + total) % total;
+      renderDetailGallery();
+    }
+
+    function selectDetailPhoto(index) {
+      state.activeDetailPhotoIndex = index;
+      renderDetailGallery();
+    }
+
+    function closeDetailModal() {
+      const modal = document.getElementById('detail-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      state.activeDetailRoomId = null;
+    }
+
+    // Lưu / bỏ lưu phòng yêu thích
+    function toggleSaveRoom(roomId) {
+      const room = ROOMS_DATA.find((r) => r.id === roomId);
+      if (!room) return;
+
+      if (state.savedRoomIds.has(roomId)) {
+        state.savedRoomIds.delete(roomId);
+        showToast(`Đã bỏ lưu "${room.title}"`);
+      } else {
+        state.savedRoomIds.add(roomId);
+        showToast(`Đã lưu "${room.title}" vào danh sách yêu thích`);
+      }
+      renderRooms();
+
+      if (state.activeDetailRoomId === roomId) {
+        document.getElementById('detail-toggle-save-btn').textContent = state.savedRoomIds.has(roomId)
+          ? 'Đã lưu phòng yêu thích'
+          : 'Lưu phòng yêu thích';
+      }
+    }
+
+    // Đặt lại toàn bộ bộ lọc
+    function resetAllFilters() {
+      state.city = 'ALL';
+      state.district = 'ALL';
+      state.priceRange = 'ALL';
+      state.selectedAmenities.clear();
+      state.showOnlySaved = false;
+
+      document.getElementById('filter-city').value = 'ALL';
+      populateDistrictOptions('ALL');
+      document.getElementById('filter-district').value = 'ALL';
+      document.getElementById('filter-price').value = 'ALL';
+
+      const savedBtn = document.getElementById('toggle-saved-only-btn');
+      savedBtn.classList.remove('bg-rose-50', 'border-rose-300', 'text-rose-700');
+
+      document.querySelectorAll('.amenity-chip').forEach((btn) => {
+        btn.classList.remove('bg-brand-600', 'text-white', 'border-brand-600');
+        btn.classList.add('bg-slate-50', 'text-slate-700', 'border-slate-200');
+      });
+
+      renderRooms();
+    }
+
+    // Mở Modal Đặt lịch hẹn xem phòng trực tiếp
+    function openBookingModal(roomId) {
+      const room = ROOMS_DATA.find((r) => r.id === roomId);
+      if (!room || room.status === 'RENTED') return;
+
+      state.activeBookingRoomId = roomId;
+
+      const modal = document.getElementById('booking-modal');
+      const summary = document.getElementById('selected-room-summary');
+      const todayStr = new Date().toISOString().split('T')[0];
+      document.getElementById('viewing-date').value = todayStr;
+
+      summary.innerHTML = `
+        <div>
+          <div class="font-bold text-slate-900">${room.title}</div>
+          <div class="text-xs text-slate-600">${room.address}, ${room.district}, ${room.city}</div>
+        </div>
+        <div class="text-left sm:text-right">
+          <div class="font-extrabold text-brand-700">${formatVND(room.price)}/tháng</div>
+          <div class="text-xs text-slate-600">Diện tích: ${room.area} m²</div>
+        </div>
+      `;
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeBookingModal() {
+      const modal = document.getElementById('booking-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      document.getElementById('booking-form').reset();
+    }
+
+    // Modal thông báo hỗ trợ (Đăng nhập / Đăng tin)
+    function openInfoModal(title, desc) {
+      document.getElementById('info-modal-title').textContent = title;
+      document.getElementById('info-modal-desc').textContent = desc;
+      const modal = document.getElementById('info-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeInfoModal() {
+      const modal = document.getElementById('info-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function openAuthModal() {
+      openInfoModal(
+        'Đăng nhập / Đăng ký ATB LAND',
+        'Hệ thống hỗ trợ hai nhóm tài khoản riêng biệt: Khách thuê (lưu phòng, đặt lịch hẹn xem phòng) và Chủ trọ (quản lý tòa nhà, đăng tin, cập nhật ảnh phòng và xác nhận lịch hẹn).'
+      );
+    }
+
+    function openPostRoomGuide() {
+      openInfoModal(
+        'Đăng tin cho thuê trên ATB LAND',
+        'Chủ trọ có thể tạo tòa nhà/khu trọ, nhập giá điện nước minh bạch, tải nhiều góc ảnh thực tế và bật/tắt trạng thái Còn phòng hoặc Đã cho thuê. Tin đăng được kiểm duyệt để hạn chế tin ảo.'
+      );
+    }
+
+    function closeMobileMenu() {
+      document.getElementById('mobile-menu').classList.add('hidden');
+      document.getElementById('menu-icon-open').classList.remove('hidden');
+      document.getElementById('menu-icon-close').classList.add('hidden');
+    }
+
+    // Khởi tạo sự kiện sau khi DOM tải xong
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('current-year').textContent = new Date().getFullYear();
+      populateDistrictOptions('ALL');
+      renderRooms();
+
+      // Toggle menu mobile
+      const mobileBtn = document.getElementById('mobile-menu-btn');
+      mobileBtn.addEventListener('click', () => {
+        const menu = document.getElementById('mobile-menu');
+        const openIcon = document.getElementById('menu-icon-open');
+        const closeIcon = document.getElementById('menu-icon-close');
+        const isHidden = menu.classList.contains('hidden');
+        menu.classList.toggle('hidden', !isHidden);
+        openIcon.classList.toggle('hidden', isHidden);
+        closeIcon.classList.toggle('hidden', !isHidden);
+      });
+
+      // Thay đổi Tỉnh/Thành phố cập nhật Quận/Huyện
+      const citySelect = document.getElementById('filter-city');
+      citySelect.addEventListener('change', (e) => {
+        state.city = e.target.value;
+        state.district = 'ALL';
+        populateDistrictOptions(state.city);
+      });
+
+      // Submit form tìm kiếm
+      document.getElementById('search-filter-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        state.city = document.getElementById('filter-city').value;
+        state.district = document.getElementById('filter-district').value;
+        state.priceRange = document.getElementById('filter-price').value;
+        renderRooms();
+        document.getElementById('danh-sach-phong').scrollIntoView({ behavior: 'smooth' });
+      });
+
+      // Chip tiện ích
+      document.querySelectorAll('.amenity-chip').forEach((chip) => {
+        chip.addEventListener('click', () => {
+          const amenity = chip.getAttribute('data-amenity');
+          if (state.selectedAmenities.has(amenity)) {
+            state.selectedAmenities.delete(amenity);
+            chip.classList.remove('bg-brand-600', 'text-white', 'border-brand-600');
+            chip.classList.add('bg-slate-50', 'text-slate-700', 'border-slate-200');
+          } else {
+            state.selectedAmenities.add(amenity);
+            chip.classList.add('bg-brand-600', 'text-white', 'border-brand-600');
+            chip.classList.remove('bg-slate-50', 'text-slate-700', 'border-slate-200');
+          }
+          renderRooms();
+        });
+      });
+
+      // Đặt lại bộ lọc
+      document.getElementById('reset-filters-btn').addEventListener('click', resetAllFilters);
+
+      // Sắp xếp
+      document.getElementById('sort-rooms').addEventListener('change', (e) => {
+        state.sortBy = e.target.value;
+        renderRooms();
+      });
+
+      // Lọc danh sách đã lưu
+      document.getElementById('toggle-saved-only-btn').addEventListener('click', (e) => {
+        state.showOnlySaved = !state.showOnlySaved;
+        e.currentTarget.classList.toggle('bg-rose-50', state.showOnlySaved);
+        e.currentTarget.classList.toggle('border-rose-300', state.showOnlySaved);
+        e.currentTarget.classList.toggle('text-rose-700', state.showOnlySaved);
+        renderRooms();
+      });
+
+      // Điều hướng ảnh trong Modal Chi tiết
+      document.getElementById('detail-prev-photo-btn').addEventListener('click', () => changeDetailPhoto(-1));
+      document.getElementById('detail-next-photo-btn').addEventListener('click', () => changeDetailPhoto(1));
+      document.getElementById('close-detail-modal').addEventListener('click', closeDetailModal);
+      document.getElementById('detail-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'detail-modal') closeDetailModal();
+      });
+
+      document.getElementById('detail-toggle-save-btn').addEventListener('click', () => {
+        if (state.activeDetailRoomId) {
+          toggleSaveRoom(state.activeDetailRoomId);
+        }
+      });
+
+      document.getElementById('detail-book-viewing-btn').addEventListener('click', () => {
+        const roomId = state.activeDetailRoomId;
+        closeDetailModal();
+        if (roomId) {
+          openBookingModal(roomId);
+        }
+      });
+
+      // Gửi form đặt lịch xem phòng
+      document.getElementById('booking-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const tenantName = document.getElementById('tenant-name').value.trim();
+        const tenantPhone = document.getElementById('tenant-phone').value.trim();
+        const vDate = document.getElementById('viewing-date').value;
+        const vSlot = document.getElementById('viewing-slot').value;
+        const room = ROOMS_DATA.find((r) => r.id === state.activeBookingRoomId);
+
+        if (!room) return;
+
+        showToast(`Đã đặt lịch xem phòng "${room.title}" vào ${vDate} (${vSlot}) cho ${tenantName} (${tenantPhone}).`);
+        closeBookingModal();
+      });
+
+      // Đóng modal đặt phòng
+      document.getElementById('close-booking-modal').addEventListener('click', closeBookingModal);
+      document.getElementById('cancel-booking-btn').addEventListener('click', closeBookingModal);
+      document.getElementById('booking-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'booking-modal') closeBookingModal();
+      });
+
+      // Đóng modal thông báo
+      document.getElementById('close-info-modal').addEventListener('click', closeInfoModal);
+      document.getElementById('confirm-info-modal').addEventListener('click', closeInfoModal);
+      document.getElementById('info-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'info-modal') closeInfoModal();
+      });
+    });
+  </script>
+</body>
+</html>
