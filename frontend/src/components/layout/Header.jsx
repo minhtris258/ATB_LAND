@@ -45,7 +45,7 @@ export default function Header({ onOpenAuthModal, onOpenPostRoomGuide }) {
               Homestay
             </a>
             <a href="#" className="hover:text-accent-600 transition py-2 text-base">
-              Tòa nhà nổi bật
+              Thành Phố Du Lịch
             </a>
             <a href="#" className="hover:text-accent-600 transition py-2 text-base">
               Booking Tự Động

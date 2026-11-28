@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Header from '../components/layout/Header';
 import HeroSearch from '../components/layout/user/HeroSearch';
 import Footer from '../components/layout/Footer';
@@ -9,7 +10,53 @@ const DISTRICTS_BY_CITY = {
   'Huế': ['Thuận Hóa', 'Phú Xuân', 'Vỹ Dạ', 'Lăng Cô', 'Thuận An'],
 };
 
-const AMENITIES = ['Điều hòa', 'Wifi', 'Bể bơi', 'Bãi đỗ xe', 'Ban công', 'Ăn sáng'];
+const FEATURED_CITIES = [
+  {
+    name: 'Hà Nội',
+    region: 'Miền Bắc',
+    available: '128 chỗ ở trống',
+    districts: 'Cầu Giấy, Đống Đa, Tây Hồ, Hoàn Kiếm, Ba Đình',
+    priceRange: '1.1 – 5.2 triệu',
+    image:
+      'https://images.unsplash.com/photo-1555921015-5532091f6026?auto=format&fit=crop&w=600&q=80',
+  },
+  {
+    name: 'TP. Hồ Chí Minh',
+    region: 'Miền Nam',
+    available: '154 chỗ ở trống',
+    districts: 'Bình Thạnh, Quận 1, Thủ Đức, Quận 7, Phú Nhuận',
+    priceRange: '1.4 – 6.8 triệu',
+    image:
+      'https://images.unsplash.com/photo-1583417319070-4a69db38a482?auto=format&fit=crop&w=600&q=80',
+  },
+  {
+    name: 'Huế',
+    region: 'Miền Trung',
+    available: '82 chỗ ở trống',
+    districts: 'Thuận Hóa, Phú Xuân, Vỹ Dạ, Lăng Cô, Thuận An',
+    priceRange: '0.9 – 4.5 triệu',
+    image:
+      'https://focusasiatravel.vn/wp-content/uploads/2018/09/Kinh-th%C3%A0nh-Hu%E1%BA%BF1.jpg',
+  },
+  {
+    name: 'Đà Nẵng',
+    region: 'Miền Trung',
+    available: '96 chỗ ở trống',
+    districts: 'Hải Châu, Sơn Trà, Ngũ Hành Sơn, Thanh Khê',
+    priceRange: '1.2 – 5.8 triệu',
+    image:
+      'https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?auto=format&fit=crop&w=600&q=80',
+  },
+  {
+    name: 'Đà Lạt',
+    region: 'Tây Nguyên',
+    available: '64 chỗ ở trống',
+    districts: 'Phường 1, Phường 2, Xuân Hương, Trại Mát',
+    priceRange: '0.8 – 4.2 triệu',
+    image:
+      'https://images.unsplash.com/photo-1595846519845-68e298c2edd8?auto=format&fit=crop&w=600&q=80',
+  },
+];
 
 const INITIAL_LISTINGS = [
   {
@@ -147,6 +194,9 @@ function matchPriceRange(price, range) {
 }
 
 export default function Home() {
+  const navigate = useNavigate();
+  const cityScrollRef = useRef(null);
+
   const [listings] = useState(INITIAL_LISTINGS);
   const [category, setCategory] = useState('ALL');
   const [city, setCity] = useState('ALL');
@@ -156,7 +206,6 @@ export default function Home() {
   const [sortBy, setSortBy] = useState('featured');
   const [savedIds, setSavedIds] = useState([]);
   const [onlySaved, setOnlySaved] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedListing, setSelectedListing] = useState(null);
   const [photoIndex, setPhotoIndex] = useState(0);
   const [toasts, setToasts] = useState([]);
@@ -167,6 +216,15 @@ export default function Home() {
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, 2800);
+  };
+
+  const scrollCities = (direction) => {
+    if (!cityScrollRef.current) return;
+    const scrollAmount = 300;
+    cityScrollRef.current.scrollBy({
+      left: direction === 'left' ? -scrollAmount : scrollAmount,
+      behavior: 'smooth',
+    });
   };
 
   const availableDistricts = useMemo(() => {
@@ -192,7 +250,9 @@ export default function Home() {
     setSavedIds((prev) => {
       const exists = prev.includes(id);
       const next = exists ? prev.filter((item) => item !== id) : [...prev, id];
-      showToast(exists ? 'Đã bỏ lưu khỏi danh sách yêu thích' : 'Đã lưu vào danh sách yêu thích');
+      showToast(
+        exists ? 'Đã bỏ lưu khỏi danh sách yêu thích' : 'Đã lưu vào danh sách yêu thích'
+      );
       return next;
     });
   };
@@ -234,7 +294,17 @@ export default function Home() {
     if (sortBy === 'price-desc') return [...list].sort((a, b) => b.price - a.price);
     if (sortBy === 'area-desc') return [...list].sort((a, b) => b.area - a.area);
     return list;
-  }, [listings, category, city, district, priceRange, onlySaved, savedIds, selectedAmenities, sortBy]);
+  }, [
+    listings,
+    category,
+    city,
+    district,
+    priceRange,
+    onlySaved,
+    savedIds,
+    selectedAmenities,
+    sortBy,
+  ]);
 
   const rooms = filteredListings.filter((item) => item.category === 'ROOM');
   const stays = filteredListings.filter(
@@ -344,172 +414,145 @@ export default function Home() {
         ))}
       </div>
 
-    <Header
+      <Header
         onOpenAuthModal={() => navigate('/login')}
-        onOpenPostRoomGuide={() => showToast('Hướng dẫn đăng tin cho thuê đang được cập nhật')}
-    />
+        onOpenPostRoomGuide={() =>
+          showToast('Hướng dẫn đăng tin cho thuê đang được cập nhật')
+        }
+      />
 
-    <HeroSearch
-    totalListings={listings.length}
-    category={category}
-    onCategoryChange={setCategory}
-    city={city}
-    onCityChange={handleCityChange}
-    district={district}
-    onDistrictChange={setDistrict}
-    availableDistricts={availableDistricts}
-    priceRange={priceRange}
-    onPriceRangeChange={setPriceRange}
-    selectedAmenities={selectedAmenities}
-    onToggleAmenity={toggleAmenity}
-    onResetFilters={resetAllFilters}
-    onSearchSubmit={handleSearchSubmit}
-    />
+      <HeroSearch
+        totalListings={listings.length}
+        category={category}
+        onCategoryChange={setCategory}
+        city={city}
+        onCityChange={handleCityChange}
+        district={district}
+        onDistrictChange={setDistrict}
+        availableDistricts={availableDistricts}
+        priceRange={priceRange}
+        onPriceRangeChange={setPriceRange}
+        selectedAmenities={selectedAmenities}
+        onToggleAmenity={toggleAmenity}
+        onResetFilters={resetAllFilters}
+        onSearchSubmit={handleSearchSubmit}
+      />
 
-
-      {/* 3. THÀNH PHỐ NỔI BẬT */}
-      <section id="thanh-pho-noi-bat" className="bg-white border-b border-slate-200 py-12 sm:py-16">
+      {/* 3. THÀNH PHỐ NỔI BẬT (THU NHỎ & KÉO NGANG) */}
+      <section
+        id="thanh-pho-noi-bat"
+        className="bg-white border-b border-slate-200 py-8 sm:py-10"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-8">
+          <div className="flex items-end justify-between gap-3 mb-5">
             <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-accent-600">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-accent-600">
                 Khám phá theo điểm đến
               </span>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">
+              <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 mt-0.5">
                 Thành phố nổi bật
               </h2>
             </div>
-            <p className="text-sm text-slate-500">
-              Bấm vào từng thẻ thành phố để lọc nhanh quỹ phòng trọ, khách sạn &amp; resort
-            </p>
+
+            <div className="hidden sm:flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => scrollCities('left')}
+                aria-label="Kéo sang trái"
+                className="p-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-teal-50 hover:border-teal-500 text-slate-700 transition"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.4"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M15 19l-7-7 7-7"
+                  />
+                </svg>
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollCities('right')}
+                aria-label="Kéo sang phải"
+                className="p-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-teal-50 hover:border-teal-500 text-slate-700 transition"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.4"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </button>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div
-              onClick={() => filterByFeaturedCity('Hà Nội')}
-              role="button"
-              tabIndex={0}
-              className="group cursor-pointer rounded-2xl border border-slate-200 bg-slate-50/70 hover:bg-white p-5 hover:border-teal-500 hover:shadow-lg transition flex flex-col justify-between"
-            >
-              <div>
-                <div className="relative h-36 rounded-xl overflow-hidden mb-4 bg-slate-200">
-                  <img
-                    src="https://images.unsplash.com/photo-1555921015-5532091f6026?auto=format&fit=crop&w=800&q=80"
-                    alt="Thành phố Hà Nội"
-                    className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/20 to-transparent" />
-                  <div className="absolute top-3 left-3">
-                    <span className="px-2.5 py-1 rounded-lg bg-white/90 text-teal-800 text-xs font-bold">
-                      Miền Bắc
+          <div
+            ref={cityScrollRef}
+            className="flex gap-4 overflow-x-auto pb-3 snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            {FEATURED_CITIES.map((cityItem) => (
+              <div
+                key={cityItem.name}
+                onClick={() => filterByFeaturedCity(cityItem.name)}
+                role="button"
+                tabIndex={0}
+                className="snap-start shrink-0 w-64 sm:w-72 group cursor-pointer rounded-2xl border border-slate-200 bg-slate-50/70 hover:bg-white p-3.5 hover:border-teal-500 hover:shadow-md transition flex flex-col justify-between"
+              >
+                <div>
+                  <div className="relative h-24 rounded-xl overflow-hidden mb-3 bg-slate-200">
+                    <img
+                      src={cityItem.image}
+                      alt={cityItem.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/75 via-slate-950/20 to-transparent" />
+                    <span className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-white/90 text-teal-800 text-[10px] font-bold">
+                      {cityItem.region}
                     </span>
+                    <div className="absolute bottom-2 left-2.5 right-2.5 flex items-center justify-between text-white gap-1">
+                      <h3 className="text-base font-extrabold truncate">{cityItem.name}</h3>
+                      <span className="shrink-0 text-[10px] font-bold bg-emerald-500/90 px-2 py-0.5 rounded-md">
+                        {cityItem.available}
+                      </span>
+                    </div>
                   </div>
-                  <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-white">
-                    <h3 className="text-xl font-extrabold">Hà Nội</h3>
-                    <span className="text-xs font-bold bg-emerald-500/90 px-2.5 py-1 rounded-lg">
-                      128 chỗ ở trống
-                    </span>
-                  </div>
-                </div>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  <strong className="text-slate-800">Khu vực trọng điểm:</strong> Cầu Giấy, Đống Đa, Tây Hồ, Hoàn Kiếm, Ba Đình.
-                </p>
-              </div>
-              <div className="mt-4 pt-3 border-t border-slate-200/80 flex items-center justify-between text-xs">
-                <span className="text-slate-600">
-                  Giá phổ biến: <strong className="text-accent-600 text-sm">1.1 – 5.2 triệu</strong>
-                </span>
-                <span className="font-bold text-accent-600 group-hover:translate-x-1 transition">
-                  Xem phòng →
-                </span>
-              </div>
-            </div>
 
-            <div
-              onClick={() => filterByFeaturedCity('TP. Hồ Chí Minh')}
-              role="button"
-              tabIndex={0}
-              className="group cursor-pointer rounded-2xl border border-slate-200 bg-slate-50/70 hover:bg-white p-5 hover:border-teal-500 hover:shadow-lg transition flex flex-col justify-between"
-            >
-              <div>
-                <div className="relative h-36 rounded-xl overflow-hidden mb-4 bg-slate-200">
-                  <img
-                    src="https://images.unsplash.com/photo-1583417319070-4a69db38a482?auto=format&fit=crop&w=800&q=80"
-                    alt="TP. Hồ Chí Minh"
-                    className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/20 to-transparent" />
-                  <div className="absolute top-3 left-3">
-                    <span className="px-2.5 py-1 rounded-lg bg-white/90 text-teal-800 text-xs font-bold">
-                      Miền Nam
-                    </span>
-                  </div>
-                  <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-white">
-                    <h3 className="text-xl font-extrabold">TP. Hồ Chí Minh</h3>
-                    <span className="text-xs font-bold bg-emerald-500/90 px-2.5 py-1 rounded-lg">
-                      154 chỗ ở trống
-                    </span>
-                  </div>
+                  <p className="text-[11px] text-slate-600 line-clamp-1">
+                    <strong className="text-slate-800">Khu vực:</strong> {cityItem.districts}
+                  </p>
                 </div>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  <strong className="text-slate-800">Khu vực trọng điểm:</strong> Bình Thạnh, Quận 1, TP. Thủ Đức, Quận 7, Phú Nhuận.
-                </p>
-              </div>
-              <div className="mt-4 pt-3 border-t border-slate-200/80 flex items-center justify-between text-xs">
-                <span className="text-slate-600">
-                  Giá phổ biến: <strong className="text-accent-600 text-sm">1.4 – 6.8 triệu</strong>
-                </span>
-                <span className="font-bold text-accent-600 group-hover:translate-x-1 transition">
-                  Xem phòng →
-                </span>
-              </div>
-            </div>
 
-            <div
-              onClick={() => filterByFeaturedCity('Huế')}
-              role="button"
-              tabIndex={0}
-              className="group cursor-pointer rounded-2xl border border-slate-200 bg-slate-50/70 hover:bg-white p-5 hover:border-teal-500 hover:shadow-lg transition flex flex-col justify-between"
-            >
-              <div>
-                <div className="relative h-36 rounded-xl overflow-hidden mb-4 bg-slate-200">
-                  <img
-                    src="https://focusasiatravel.vn/wp-content/uploads/2018/09/Kinh-th%C3%A0nh-Hu%E1%BA%BF1.jpg"
-                    alt="Thành phố Huế"
-                    className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/20 to-transparent" />
-                  <div className="absolute top-3 left-3">
-                    <span className="px-2.5 py-1 rounded-lg bg-white/90 text-teal-800 text-xs font-bold">
-                      Miền Trung
-                    </span>
-                  </div>
-                  <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-white">
-                    <h3 className="text-xl font-extrabold">Huế</h3>
-                    <span className="text-xs font-bold bg-emerald-500/90 px-2.5 py-1 rounded-lg">
-                      82 chỗ ở trống
-                    </span>
-                  </div>
+                <div className="mt-2.5 pt-2 border-t border-slate-200/80 flex items-center justify-between text-[11px]">
+                  <span className="text-slate-600">
+                    Giá: <strong className="text-accent-600 text-xs">{cityItem.priceRange}</strong>
+                  </span>
+                  <span className="font-bold text-accent-600 group-hover:translate-x-0.5 transition">
+                    Xem →
+                  </span>
                 </div>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  <strong className="text-slate-800">Khu vực trọng điểm:</strong> Thuận Hóa, Phú Xuân, Vỹ Dạ, Lăng Cô, Thuận An.
-                </p>
               </div>
-              <div className="mt-4 pt-3 border-t border-slate-200/80 flex items-center justify-between text-xs">
-                <span className="text-slate-600">
-                  Giá phổ biến: <strong className="text-accent-600 text-sm">0.9 – 4.5 triệu</strong>
-                </span>
-                <span className="font-bold text-accent-600 group-hover:translate-x-1 transition">
-                  Xem phòng →
-                </span>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* 4. DANH SÁCH CHỖ Ở */}
-      <div id="danh-sach-cho-o" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 space-y-16">
+      <div
+        id="danh-sach-cho-o"
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 space-y-16"
+      >
         <div className="bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <span className="text-xs font-bold uppercase tracking-wider text-accent-600">
@@ -635,7 +678,46 @@ export default function Home() {
         </section>
       </div>
 
-      {/* 5. MODAL CHI TIẾT */}
+      {/* 5. CAM KẾT PHÁP LÝ & DÀNH CHO CHỦ TRỌ */}
+      <section
+        id="cam-ket-phap-ly"
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-14"
+      >
+        <div
+          id="danh-cho-chu-tro"
+          className="bg-slate-900 rounded-3xl p-6 sm:p-10 text-white shadow-xl"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+            <div>
+              <span className="inline-block px-3 py-1 rounded-full bg-teal-500/20 text-teal-300 text-xs font-bold mb-3">
+                Minh bạch &amp; An toàn
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-extrabold">
+                Cam kết pháp lý &amp; đồng hành cùng Chủ trọ
+              </h2>
+              <p className="mt-2.5 text-sm text-slate-300 leading-relaxed">
+                ATB LAND không thu cọc giữ chỗ qua nền tảng, khuyến khích khách xem phòng thực tế và hỗ trợ chủ cơ sở đăng tin, quản lý lịch hẹn nhanh gọn.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs sm:text-sm">
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                <p className="font-bold text-teal-300">0đ Phí giữ chỗ trước</p>
+                <p className="text-slate-300 mt-1">
+                  Thanh toán hoặc làm hợp đồng trực tiếp với chủ cơ sở.
+                </p>
+              </div>
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                <p className="font-bold text-teal-300">Thông tin rõ ràng</p>
+                <p className="text-slate-300 mt-1">
+                  Giá thuê, khu vực và tiện ích hiển thị minh bạch.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 6. MODAL CHI TIẾT */}
       {selectedListing && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 backdrop-blur-xs p-3 sm:p-5 overflow-y-auto"
@@ -663,8 +745,18 @@ export default function Home() {
                 aria-label="Đóng chi tiết"
                 className="p-2 rounded-xl text-slate-500 hover:bg-slate-200/70 hover:text-slate-800 transition"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -682,23 +774,47 @@ export default function Home() {
                       <button
                         type="button"
                         onClick={() =>
-                          setPhotoIndex((i) => (i - 1 + activePhotos.length) % activePhotos.length)
+                          setPhotoIndex(
+                            (i) => (i - 1 + activePhotos.length) % activePhotos.length
+                          )
                         }
                         aria-label="Ảnh trước"
                         className="absolute left-3 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-white/90 hover:bg-white text-slate-800 shadow-md transition"
                       >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.4" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.4"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M15 19l-7-7 7-7"
+                          />
                         </svg>
                       </button>
                       <button
                         type="button"
-                        onClick={() => setPhotoIndex((i) => (i + 1) % activePhotos.length)}
+                        onClick={() =>
+                          setPhotoIndex((i) => (i + 1) % activePhotos.length)
+                        }
                         aria-label="Ảnh tiếp theo"
                         className="absolute right-3 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-white/90 hover:bg-white text-slate-800 shadow-md transition"
                       >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.4" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.4"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M9 5l7 7-7 7"
+                          />
                         </svg>
                       </button>
                     </>
@@ -720,10 +836,16 @@ export default function Home() {
                       type="button"
                       onClick={() => setPhotoIndex(idx)}
                       className={`h-16 rounded-xl overflow-hidden border-2 transition ${
-                        idx === photoIndex ? 'border-accent-600' : 'border-transparent opacity-75 hover:opacity-100'
+                        idx === photoIndex
+                          ? 'border-accent-600'
+                          : 'border-transparent opacity-75 hover:opacity-100'
                       }`}
                     >
-                      <img src={img.url} alt={img.caption} className="w-full h-full object-cover" />
+                      <img
+                        src={img.url}
+                        alt={img.caption}
+                        className="w-full h-full object-cover"
+                      />
                     </button>
                   ))}
                 </div>
@@ -738,103 +860,23 @@ export default function Home() {
                     Không thu cọc trước
                   </span>
                 </div>
-                <p className="text-sm text-slate-600 font-medium">{selectedListing.address}</p>
-                <p className="text-sm text-slate-600 leading-relaxed">{selectedListing.description}</p>
+                <p className="text-sm text-slate-600 font-medium">
+                  {selectedListing.address}
+                </p>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  {selectedListing.description}
+                </p>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      <section id="danh-cho-chu-tro" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-        <div class="bg-gray-500 rounded-3xl p-6 sm:p-10 text-white shadow-xl mb-12">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-            <div class="lg:col-span-7">
-            <span class="inline-block px-3 py-1 rounded-full bg-accent-500/20 text-teal-300 text-xs font-bold border border-accent-500/30 mb-3">
-                DÀNH CHO CHỦ TRỌ &amp; NHÀ ĐẦU TƯ
-            </span>
-            <h2 class="text-2xl sm:text-3xl font-extrabold leading-snug">
-                Quản lý phòng trống, bộ sưu tập ảnh &amp; lịch hẹn xem phòng tập trung
-            </h2>
-            <p class="text-slate-300 text-sm sm:text-base mt-3">
-                Đăng tin trực tiếp trên giao diện hiện đại, tải nhiều góc ảnh thực tế, bật/tắt trạng thái phòng chỉ với 1 chạm và tiếp nhận lịch hẹn xem phòng rõ ràng.
-            </p>
-            <div class="mt-6 flex flex-wrap gap-3">
-                <button type="button" onclick="openPostRoomGuide()" class="px-5 py-2.5 rounded-xl bg-accent-500 hover:bg-accent-600 text-white text-sm font-bold transition shadow-md">
-                Đăng tin cho thuê ngay
-                </button>
-                <a href="#cam-ket-phap-ly" class="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-sm font-semibold transition">
-                Xem quy chế vận hành
-                </a>
-            </div>
-            </div>
-
-            <div class="lg:col-span-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div class="bg-white/10 backdrop-blur rounded-2xl p-4 border border-white/10">
-                <div class="text-sm font-bold text-teal-300">Chủ trọ Xác thực</div>
-                <p class="text-xs text-slate-200 mt-1">Gắn huy hiệu uy tín khi xác minh thông tin chủ sở hữu hoặc hợp đồng quản lý.</p>
-            </div>
-            <div class="bg-white/10 backdrop-blur rounded-2xl p-4 border border-white/10">
-                <div class="text-sm font-bold text-teal-300">Tự động ẩn sau 21 ngày</div>
-                <p class="text-xs text-slate-200 mt-1">Yêu cầu xác nhận còn phòng định kỳ để đảm bảo dữ liệu luôn chính xác.</p>
-            </div>
-            <div class="bg-white/10 backdrop-blur rounded-2xl p-4 border border-white/10">
-                <div class="text-sm font-bold text-teal-300">Ảnh thực tế đa góc nhìn</div>
-                <p class="text-xs text-slate-200 mt-1">Hiển thị đầy đủ không gian phòng, khu bếp, nhà vệ sinh và ban công trước khi hẹn xem.</p>
-            </div>
-            <div class="bg-white/10 backdrop-blur rounded-2xl p-4 border border-white/10">
-                <div class="text-sm font-bold text-teal-300">Báo cáo tin sai sự thật</div>
-                <p class="text-xs text-slate-200 mt-1">Cơ chế tiếp nhận phản hồi từ người tìm thuê để kiểm duyệt và xử lý kịp thời.</p>
-            </div>
-            </div>
-        </div>
-        </div>
-
-
-        <div id="cam-ket-phap-ly" class="pt-2">
-        <div class="text-center max-w-2xl mx-auto mb-8">
-            <span class="text-xs font-bold uppercase tracking-wider text-accent-600">Minh bạch &amp; An toàn</span>
-            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">
-            Cam kết chống tin ảo &amp; Tuân thủ pháp lý
-            </h2>
-            <p class="text-sm text-slate-600 mt-2">
-            ATB LAND xây dựng quy chuẩn vận hành rõ ràng, bảo vệ quyền lợi người thuê, chủ trọ và tuân thủ quy định pháp luật tại Việt Nam.
-            </p>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs">
-            <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold mb-4">01</div>
-            <h3 class="text-base font-bold text-slate-900">Chống tin ảo &amp; Môi giới mạo danh</h3>
-            <p class="text-sm text-slate-600 mt-2 leading-relaxed">
-                Kiểm duyệt nội dung trước khi đăng, yêu cầu xác thực thông tin chủ cho thuê, tự động ẩn tin sau 21 ngày nếu không xác nhận còn trống và hỗ trợ nút báo cáo tin sai sự thật.
-            </p>
-            </div>
-
-            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs">
-            <div class="w-10 h-10 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center font-bold mb-4">02</div>
-            <h3 class="text-base font-bold text-slate-900">Minh bạch chi phí &amp; Quy chế hoạt động</h3>
-            <p class="text-sm text-slate-600 mt-2 leading-relaxed">
-                Công khai giá thuê, giá điện/nước và tiện ích ngay trên tin đăng; quy định rõ quy trình hẹn xem phòng trực tiếp, trao đổi trực tiếp với chủ trọ và cơ chế hỗ trợ giải quyết khiếu nại.
-            </p>
-            </div>
-
-            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs">
-            <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold mb-4">03</div>
-            <h3 class="text-base font-bold text-slate-900">Tuân thủ TMĐT &amp; Bảo vệ dữ liệu cá nhân</h3>
-            <p class="text-sm text-slate-600 mt-2 leading-relaxed">
-                Hướng tới đăng ký sàn/website thương mại điện tử theo quy định hiện hành và áp dụng chính sách bảo vệ dữ liệu cá nhân (như họ tên, số điện thoại, lịch hẹn) an toàn, đúng mục đích.
-            </p>
-            </div>
-        </div>
-        </div>
-    </section>
-      {/* 6. FOOTER */}
-        <Footer
-            onOpenPostGuide={() =>
-            showToast('Hướng dẫn đăng tin cho Host đang được cập nhật')
-            }
-        />
+      <Footer
+        onOpenPostGuide={() =>
+          showToast('Hướng dẫn đăng tin cho thuê đang được cập nhật')
+        }
+      />
     </div>
   );
 }

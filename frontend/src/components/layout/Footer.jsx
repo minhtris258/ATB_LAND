@@ -1,3 +1,6 @@
+import { Link } from 'react-router-dom';
+import logoAtbLand from '../../assets/logo-atb-land.jpg';
+
 export default function Footer({ onOpenPostGuide }) {
   const currentYear = new Date().getFullYear();
 
@@ -13,12 +16,14 @@ export default function Footer({ onOpenPostGuide }) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Thương hiệu */}
           <div className="lg:col-span-1">
-            <div className="flex items-center gap-2.5 mb-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent-500 to-teal-600 flex items-center justify-center text-white font-extrabold text-sm">
-                ATB
-              </div>
-              <span className="text-lg font-extrabold text-white tracking-tight">ATB LAND</span>
-            </div>
+              <Link to="/" className="flex items-center gap-2.5 group justify-center mb-4 ">
+                  <img
+                      src={logoAtbLand}
+                      alt="Logo ATB LAND"
+                      className="w-30 h-auto object-cover  transition"
+                  />
+              </Link>
+
             <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
               Nền tảng kết nối tìm kiếm phòng trọ, căn hộ dịch vụ và chung cư mini chính chủ, hỗ trợ xem bộ sưu tập ảnh thực tế và đặt lịch hẹn xem phòng minh bạch.
             </p>
