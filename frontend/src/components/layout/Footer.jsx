@@ -1,3 +1,5 @@
+import logoAtbLand from '../../assets/logo-atb-land.png';
+
 export default function Footer({ onOpenPostGuide }) {
   const currentYear = new Date().getFullYear();
 
@@ -14,10 +16,16 @@ export default function Footer({ onOpenPostGuide }) {
           {/* Thương hiệu */}
           <div className="lg:col-span-1">
             <div className="flex items-center gap-2.5 mb-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent-500 to-teal-600 flex items-center justify-center text-white font-extrabold text-sm">
-                ATB
-              </div>
-              <span className="text-lg font-extrabold text-white tracking-tight">ATB LAND</span>
+              
+              
+            <img
+              src={logoAtbLand}
+              alt="Logo ATB LAND"
+              className="h-auto w-30 object-cover transition"
+            />
+          
+              
+              
             </div>
             <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
               Nền tảng kết nối tìm kiếm phòng trọ, căn hộ dịch vụ và chung cư mini chính chủ, hỗ trợ xem bộ sưu tập ảnh thực tế và đặt lịch hẹn xem phòng minh bạch.
