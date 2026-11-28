@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import logoAtbLand from '../../assets/logo-atb-land.png';
 
 export default function Footer({ onOpenPostGuide }) {
@@ -15,18 +16,14 @@ export default function Footer({ onOpenPostGuide }) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Thương hiệu */}
           <div className="lg:col-span-1">
-            <div className="flex items-center gap-2.5 mb-3">
-              
-              
-            <img
-              src={logoAtbLand}
-              alt="Logo ATB LAND"
-              className="h-auto w-30 object-cover transition"
-            />
-          
-              
-              
-            </div>
+
+              <Link to="/" className="flex items-center gap-2.5 group justify-center mb-4 ">
+                  <img
+                      src={logoAtbLand}
+                      alt="Logo ATB LAND"
+                      className="w-30 h-auto object-cover  transition"
+                  />
+              </Link>
             <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
               Nền tảng kết nối tìm kiếm phòng trọ, căn hộ dịch vụ và chung cư mini chính chủ, hỗ trợ xem bộ sưu tập ảnh thực tế và đặt lịch hẹn xem phòng minh bạch.
             </p>

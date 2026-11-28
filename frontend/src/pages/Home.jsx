@@ -8,7 +8,53 @@ const DISTRICTS_BY_CITY = {
   'Huế': ['Thuận Hóa', 'Phú Xuân', 'Vỹ Dạ', 'Lăng Cô', 'Thuận An'],
 };
 
-const AMENITIES = ['Điều hòa', 'Wifi', 'Bể bơi', 'Bãi đỗ xe', 'Ban công', 'Ăn sáng'];
+const FEATURED_CITIES = [
+  {
+    name: 'Hà Nội',
+    region: 'Miền Bắc',
+    available: '128 chỗ ở trống',
+    districts: 'Cầu Giấy, Đống Đa, Tây Hồ, Hoàn Kiếm, Ba Đình',
+    priceRange: '1.1 – 5.2 triệu',
+    image:
+      'https://images.unsplash.com/photo-1555921015-5532091f6026?auto=format&fit=crop&w=600&q=80',
+  },
+  {
+    name: 'TP. Hồ Chí Minh',
+    region: 'Miền Nam',
+    available: '154 chỗ ở trống',
+    districts: 'Bình Thạnh, Quận 1, Thủ Đức, Quận 7, Phú Nhuận',
+    priceRange: '1.4 – 6.8 triệu',
+    image:
+      'https://images.unsplash.com/photo-1583417319070-4a69db38a482?auto=format&fit=crop&w=600&q=80',
+  },
+  {
+    name: 'Huế',
+    region: 'Miền Trung',
+    available: '82 chỗ ở trống',
+    districts: 'Thuận Hóa, Phú Xuân, Vỹ Dạ, Lăng Cô, Thuận An',
+    priceRange: '0.9 – 4.5 triệu',
+    image:
+      'https://focusasiatravel.vn/wp-content/uploads/2018/09/Kinh-th%C3%A0nh-Hu%E1%BA%BF1.jpg',
+  },
+  {
+    name: 'Đà Nẵng',
+    region: 'Miền Trung',
+    available: '96 chỗ ở trống',
+    districts: 'Hải Châu, Sơn Trà, Ngũ Hành Sơn, Thanh Khê',
+    priceRange: '1.2 – 5.8 triệu',
+    image:
+      'https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?auto=format&fit=crop&w=600&q=80',
+  },
+  {
+    name: 'Đà Lạt',
+    region: 'Tây Nguyên',
+    available: '64 chỗ ở trống',
+    districts: 'Phường 1, Phường 2, Xuân Hương, Trại Mát',
+    priceRange: '0.8 – 4.2 triệu',
+    image:
+      'https://images.unsplash.com/photo-1595846519845-68e298c2edd8?auto=format&fit=crop&w=600&q=80',
+  },
+];
 
 const INITIAL_LISTINGS = [
   {
@@ -146,6 +192,9 @@ function matchPriceRange(price, range) {
 }
 
 export default function Home() {
+  const navigate = useNavigate();
+  const cityScrollRef = useRef(null);
+
   const [listings] = useState(INITIAL_LISTINGS);
   const [category, setCategory] = useState('ALL');
   const [city, setCity] = useState('ALL');
@@ -155,7 +204,6 @@ export default function Home() {
   const [sortBy, setSortBy] = useState('featured');
   const [savedIds, setSavedIds] = useState([]);
   const [onlySaved, setOnlySaved] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedListing, setSelectedListing] = useState(null);
   const [photoIndex, setPhotoIndex] = useState(0);
   const [toasts, setToasts] = useState([]);
@@ -166,6 +214,15 @@ export default function Home() {
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, 2800);
+  };
+
+  const scrollCities = (direction) => {
+    if (!cityScrollRef.current) return;
+    const scrollAmount = 300;
+    cityScrollRef.current.scrollBy({
+      left: direction === 'left' ? -scrollAmount : scrollAmount,
+      behavior: 'smooth',
+    });
   };
 
   const availableDistricts = useMemo(() => {
@@ -191,7 +248,9 @@ export default function Home() {
     setSavedIds((prev) => {
       const exists = prev.includes(id);
       const next = exists ? prev.filter((item) => item !== id) : [...prev, id];
-      showToast(exists ? 'Đã bỏ lưu khỏi danh sách yêu thích' : 'Đã lưu vào danh sách yêu thích');
+      showToast(
+        exists ? 'Đã bỏ lưu khỏi danh sách yêu thích' : 'Đã lưu vào danh sách yêu thích'
+      );
       return next;
     });
   };
@@ -233,7 +292,17 @@ export default function Home() {
     if (sortBy === 'price-desc') return [...list].sort((a, b) => b.price - a.price);
     if (sortBy === 'area-desc') return [...list].sort((a, b) => b.area - a.area);
     return list;
-  }, [listings, category, city, district, priceRange, onlySaved, savedIds, selectedAmenities, sortBy]);
+  }, [
+    listings,
+    category,
+    city,
+    district,
+    priceRange,
+    onlySaved,
+    savedIds,
+    selectedAmenities,
+    sortBy,
+  ]);
 
   const rooms = filteredListings.filter((item) => item.category === 'ROOM');
   const stays = filteredListings.filter(
@@ -343,6 +412,7 @@ export default function Home() {
         ))}
       </div>
 
+
     <HeroSearch
     totalListings={listings.length}
     category={category}
@@ -417,7 +487,9 @@ export default function Home() {
                   Xem phòng →
                 </span>
               </div>
+
             </div>
+          </div>
 
             <div
               onClick={() => filterByFeaturedCity('TP. Hồ Chí Minh')}
@@ -443,7 +515,17 @@ export default function Home() {
                     <span class="text-xs font-bold bg-emerald-500/90 px-2.5 py-1 rounded-lg">
                       154 chỗ ở trống
                     </span>
+                    <div className="absolute bottom-2 left-2.5 right-2.5 flex items-center justify-between text-white gap-1">
+                      <h3 className="text-base font-extrabold truncate">{cityItem.name}</h3>
+                      <span className="shrink-0 text-[10px] font-bold bg-emerald-500/90 px-2 py-0.5 rounded-md">
+                        {cityItem.available}
+                      </span>
+                    </div>
                   </div>
+
+                  <p className="text-[11px] text-slate-600 line-clamp-1">
+                    <strong className="text-slate-800">Khu vực:</strong> {cityItem.districts}
+                  </p>
                 </div>
                 <p class="text-xs text-slate-600 leading-relaxed">
                   <strong class="text-slate-800">Khu vực trọng điểm:</strong> Bình Thạnh, Quận 1, TP. Thủ Đức, Quận 7, Phú Nhuận.
@@ -629,7 +711,46 @@ export default function Home() {
         </section>
       </div>
 
-      {/* 5. MODAL CHI TIẾT */}
+      {/* 5. CAM KẾT PHÁP LÝ & DÀNH CHO CHỦ TRỌ */}
+      <section
+        id="cam-ket-phap-ly"
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-14"
+      >
+        <div
+          id="danh-cho-chu-tro"
+          className="bg-slate-900 rounded-3xl p-6 sm:p-10 text-white shadow-xl"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+            <div>
+              <span className="inline-block px-3 py-1 rounded-full bg-teal-500/20 text-teal-300 text-xs font-bold mb-3">
+                Minh bạch &amp; An toàn
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-extrabold">
+                Cam kết pháp lý &amp; đồng hành cùng Chủ trọ
+              </h2>
+              <p className="mt-2.5 text-sm text-slate-300 leading-relaxed">
+                ATB LAND không thu cọc giữ chỗ qua nền tảng, khuyến khích khách xem phòng thực tế và hỗ trợ chủ cơ sở đăng tin, quản lý lịch hẹn nhanh gọn.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs sm:text-sm">
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                <p className="font-bold text-teal-300">0đ Phí giữ chỗ trước</p>
+                <p className="text-slate-300 mt-1">
+                  Thanh toán hoặc làm hợp đồng trực tiếp với chủ cơ sở.
+                </p>
+              </div>
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                <p className="font-bold text-teal-300">Thông tin rõ ràng</p>
+                <p className="text-slate-300 mt-1">
+                  Giá thuê, khu vực và tiện ích hiển thị minh bạch.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 6. MODAL CHI TIẾT */}
       {selectedListing && (
         <div
           class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 backdrop-blur-xs p-3 sm:p-5 overflow-y-auto"
@@ -676,7 +797,9 @@ export default function Home() {
                       <button
                         type="button"
                         onClick={() =>
-                          setPhotoIndex((i) => (i - 1 + activePhotos.length) % activePhotos.length)
+                          setPhotoIndex(
+                            (i) => (i - 1 + activePhotos.length) % activePhotos.length
+                          )
                         }
                         aria-label="Ảnh trước"
                         class="absolute left-3 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-white/90 hover:bg-white text-slate-800 shadow-md transition"
@@ -687,7 +810,9 @@ export default function Home() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => setPhotoIndex((i) => (i + 1) % activePhotos.length)}
+                        onClick={() =>
+                          setPhotoIndex((i) => (i + 1) % activePhotos.length)
+                        }
                         aria-label="Ảnh tiếp theo"
                         class="absolute right-3 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-white/90 hover:bg-white text-slate-800 shadow-md transition"
                       >

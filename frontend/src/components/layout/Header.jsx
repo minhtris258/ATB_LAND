@@ -110,6 +110,7 @@ export default function Header({ onOpenAuthModal, onOpenPostRoomGuide }) {
               alt="Logo ATB LAND"
               className="h-auto w-30 object-cover transition"
             />
+
           </Link>
 
           {/* Menu Desktop (tự động sáng mục đang truy cập) */}
@@ -119,6 +120,7 @@ export default function Header({ onOpenAuthModal, onOpenPostRoomGuide }) {
                 {item.label}
               </NavLink>
             ))}
+
           </nav>
 
           {/* Khu vực bên phải (Desktop) */}
