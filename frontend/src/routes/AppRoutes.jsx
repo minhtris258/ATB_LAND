@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import AdminLayout from '../layouts/AdminLayout';
 import ProtectedAdminRoute from '../components/auth/ProtectedAdminRoute';
 import LoginPage from '../pages/auth/LoginPage';
@@ -9,10 +9,20 @@ import AmenitiesPage from '../pages/admin/AmenitiesPage';
 import BookingsPage from '../pages/admin/BookingsPage';
 import RatingsPage from '../pages/admin/RatingsPage';
 
+// import ui
+import Home from '../pages/Home';
+import RoomsPage from '../pages/RoomsPage';
+import GuesthousesPage from '../pages/GuesthousesPage';
+
+
 export default function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/admin" replace />} />
+      {/* Trang chủ khi truy cập "/" lần đầu */}
+      <Route path="/" element={<Home />} />
+      <Route path="/nha-nghi" element={<GuesthousesPage />} />
+      <Route path="/phong-tro" element={<RoomsPage />} />
+
       <Route path="/login" element={<LoginPage />} />
 
       <Route element={<ProtectedAdminRoute />}>
